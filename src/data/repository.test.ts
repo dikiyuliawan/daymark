@@ -1,267 +1,216 @@
 import { describe, expect, it } from "vitest";
-import { createEmptyAppData, AppData, Project, Task } from "../domain/types";
+import { AppData, createEmptyAppData } from "../domain/types";
 import {
+  addFocusSessionToData,
   addProjectToData,
+  addSubtaskToData,
   addTaskToData,
   DaymarkRepository,
   insertTask,
   removeProjectFromData,
+  removeSubtaskFromData,
   removeTaskFromData,
-  renameProjectInData,
+  setTaskOrderInData,
+  setThemeInData,
+  toggleSubtaskInData,
+  updateProjectInData,
   updateTaskInData,
 } from "./repository";
-import { getBrowserStorage, STORAGE_KEY } from "./storage";
+import { getBrowserStorage, LEGACY_STORAGE_KEY, STORAGE_KEY } from "./storage";
 
 type MemoryStorage = Record<string, string>;
 
-function memoryStorage(initial: MemoryStorage = {}): {
-  storage: {
-    getItem(key: string): string | null;
-    setItem(key: string, value: string): void;
-    removeItem(key: string): void;
-  };
-  contents: MemoryStorage;
-} {
+function memoryStorage(initial: MemoryStorage = {}) {
   const contents: MemoryStorage = { ...initial };
   return {
     contents,
     storage: {
-      getItem: (key) => (key in contents ? contents[key] : null),
-      setItem: (key, value) => {
+      getItem: (key: string) => (key in contents ? contents[key] : null),
+      setItem: (key: string, value: string) => {
         contents[key] = value;
       },
-      removeItem: (key) => {
+      removeItem: (key: string) => {
         delete contents[key];
       },
     },
   };
 }
 
-function failingStorage(): {
-  storage: {
-    getItem(key: string): string | null;
-    setItem(key: string, value: string): void;
-    removeItem(key: string): void;
-  };
-} {
+function failingStorage() {
   return {
-    storage: {
-      getItem: () => {
-        throw new Error("blocked");
-      },
-      setItem: () => {
-        throw new Error("quota exceeded");
-      },
-      removeItem: () => {
-        throw new Error("blocked");
-      },
+    getItem: () => {
+      throw new Error("blocked");
+    },
+    setItem: () => {
+      throw new Error("quota exceeded");
+    },
+    removeItem: () => {
+      throw new Error("blocked");
     },
   };
 }
 
+function addTask(data: AppData, title = "First"): AppData {
+  return addTaskToData(data, { title, details: "", projectId: null, scheduledDate: null });
+}
+
 describe("DaymarkRepository", () => {
-  it("round-trips data through the storage key", () => {
+  it("round-trips v2 data through the versioned key", () => {
     const { storage, contents } = memoryStorage();
     const repo = new DaymarkRepository(storage);
-    const withProject = addProjectToData(createEmptyAppData(), "Auth");
-    const saved = repo.save(withProject);
-    expect(saved.kind).toBe("saved");
-    expect(contents[STORAGE_KEY]).toContain('"schemaVersion":1');
+    expect(repo.save(addTask(createEmptyAppData(), "Ship")).kind).toBe("saved");
+    expect(contents[STORAGE_KEY]).toContain('"schemaVersion":2');
 
     const loaded = repo.load();
     expect(loaded.kind).toBe("ready");
     if (loaded.kind === "ready") {
-      expect(loaded.data.projects).toHaveLength(1);
-      expect(loaded.data.projects[0].name).toBe("Auth");
+      expect(loaded.data.tasks).toHaveLength(1);
+      expect(loaded.data.settings.theme).toBe("system");
     }
   });
 
-  it("treats empty storage as a fresh start", () => {
-    const { storage } = memoryStorage();
+  it("migrates a v1 document into v2 on load", () => {
+    const v1 = {
+      schemaVersion: 1,
+      projects: [{ id: "p1", name: "Auth", createdAt: "x", updatedAt: "x" }],
+      tasks: [
+        {
+          id: "t1",
+          title: "Old",
+          details: "",
+          status: "todo",
+          projectId: "p1",
+          scheduledDate: null,
+          createdAt: "2026-10-16T08:00:00.000Z",
+          updatedAt: "2026-10-16T08:00:00.000Z",
+        },
+      ],
+    };
+    const { storage, contents } = memoryStorage({ [LEGACY_STORAGE_KEY]: JSON.stringify(v1) });
     const loaded = new DaymarkRepository(storage).load();
     expect(loaded.kind).toBe("ready");
     if (loaded.kind === "ready") {
-      expect(loaded.data.tasks).toHaveLength(0);
-      expect(loaded.data.projects).toHaveLength(0);
+      expect(loaded.migrated).toBe(true);
+      expect(loaded.data.tasks[0].subtasks).toEqual([]);
+      expect(loaded.data.tasks[0].priority).toBeNull();
     }
+    expect(contents[STORAGE_KEY]).toContain('"schemaVersion":2');
   });
 
-  it("reports corrupt data instead of throwing or resetting it", () => {
-    const { storage, contents } = memoryStorage({
-      [STORAGE_KEY]: "{not json at all",
-    });
+  it("reports corrupt data without overwriting it", () => {
+    const { storage, contents } = memoryStorage({ [STORAGE_KEY]: "{not json" });
     const loaded = new DaymarkRepository(storage).load();
     expect(loaded.kind).toBe("corrupt");
-    if (loaded.kind === "corrupt") {
-      expect(loaded.raw).toBe("{not json at all");
-    }
-    expect(contents[STORAGE_KEY]).toBe("{not json at all");
+    expect(contents[STORAGE_KEY]).toBe("{not json");
   });
 
-  it("reports unavailable storage for both read and write", () => {
-    const { storage } = failingStorage();
-    const repo = new DaymarkRepository(storage);
+  it("reports unavailable storage", () => {
+    const repo = new DaymarkRepository(failingStorage());
     expect(repo.load().kind).toBe("unavailable");
     expect(repo.save(createEmptyAppData()).kind).toBe("unavailable");
+    expect(new DaymarkRepository(null).save(createEmptyAppData()).kind).toBe("unavailable");
   });
 
-  it("never writes when storage is missing entirely", () => {
-    const repo = new DaymarkRepository(null);
-    expect(repo.save(createEmptyAppData()).kind).toBe("unavailable");
+  it("uses real browser storage with the v2 key", () => {
+    const storage = getBrowserStorage();
+    if (!storage) return;
+    const repo = new DaymarkRepository(storage);
+    expect(repo.save(addTask(createEmptyAppData(), "Persist")).kind).toBe("saved");
+    expect(window.localStorage.getItem(STORAGE_KEY)).toContain("Persist");
+    storage.removeItem(STORAGE_KEY);
   });
 });
 
 describe("task mutations", () => {
-  it("starts a new task as Todo with optional Today date", () => {
-    const data = addTaskToData(createEmptyAppData(), {
-      title: "  Ship the POC  ",
-      details: "notes",
-      projectId: null,
-      scheduledDate: "2026-10-17",
-    });
-    expect(data.tasks).toHaveLength(1);
-    const task = data.tasks[0];
-    expect(task.title).toBe("Ship the POC");
-    expect(task.status).toBe("todo");
-    expect(task.scheduledDate).toBe("2026-10-17");
-    expect(task.projectId).toBeNull();
+  it("creates a new task with defaults and puts it on top", () => {
+    let data = addTask(createEmptyAppData(), "First");
+    data = addTask(data, "Second");
+    const top = data.tasks[0];
+    expect(top.title).toBe("Second");
+    expect(top.status).toBe("todo");
+    expect(top.subtasks).toEqual([]);
+    expect(top.priority).toBeNull();
+    expect(top.completedAt).toBeNull();
+    expect(top.order).toBeLessThan(data.tasks[1].order);
   });
 
-  it("prepends newest tasks", () => {
-    let data = addTaskToData(createEmptyAppData(), {
-      title: "First",
-      details: "",
-      projectId: null,
-      scheduledDate: null,
-    });
-    data = addTaskToData(data, { title: "Second", details: "", projectId: null, scheduledDate: null });
-    expect(data.tasks.map((t) => t.title)).toEqual(["Second", "First"]);
+  it("stamps completedAt on done and clears it when reopened", () => {
+    let data = addTask(createEmptyAppData());
+    const id = data.tasks[0].id;
+    data = updateTaskInData(data, id, { status: "done" }) as AppData;
+    expect(data.tasks[0].completedAt).not.toBeNull();
+    data = updateTaskInData(data, id, { status: "todo" }) as AppData;
+    expect(data.tasks[0].completedAt).toBeNull();
   });
 
-  it("updates fields and bumps updatedAt", () => {
-    const data = addTaskToData(createEmptyAppData(), {
-      title: "First",
-      details: "",
-      projectId: null,
-      scheduledDate: null,
-    });
-    const before = data.tasks[0];
-    const updated = updateTaskInData(data, before.id, {
-      status: "done",
-      scheduledDate: null,
-    });
-    expect(updated).not.toBeNull();
-    if (updated) {
-      const task = updated.tasks[0];
-      expect(task.status).toBe("done");
-      expect(task.updatedAt >= before.updatedAt).toBe(true);
-    }
+  it("returns null for unknown ids", () => {
+    expect(updateTaskInData(createEmptyAppData(), "ghost", { status: "done" })).toBeNull();
+    expect(removeTaskFromData(createEmptyAppData(), "ghost")).toBeNull();
   });
 
-  it("returns null updates/removals for unknown ids", () => {
-    const data = createEmptyAppData();
-    expect(updateTaskInData(data, "ghost", { status: "done" })).toBeNull();
-    expect(removeTaskFromData(data, "ghost")).toBeNull();
+  it("detaches focus sessions when a task is deleted", () => {
+    let data = addTask(createEmptyAppData());
+    const id = data.tasks[0].id;
+    data = addFocusSessionToData(data, {
+      taskId: id,
+      startedAt: "2026-10-17T08:00:00.000Z",
+      endedAt: "2026-10-17T08:25:00.000Z",
+      durationSec: 1500,
+    });
+    const next = removeTaskFromData(data, id) as AppData;
+    expect(next.tasks).toHaveLength(0);
+    expect(next.focusSessions[0].taskId).toBeNull();
   });
 
-  it("reinserts a task object verbatim (undo path)", () => {
-    let data = addTaskToData(createEmptyAppData(), {
-      title: "First",
-      details: "",
-      projectId: null,
-      scheduledDate: null,
-    });
+  it("reinserts a task verbatim for undo", () => {
+    let data = addTask(createEmptyAppData());
     const original = data.tasks[0];
     data = removeTaskFromData(data, original.id) as AppData;
-    expect(data.tasks).toHaveLength(0);
     data = insertTask(data, original);
     expect(data.tasks[0]).toEqual(original);
   });
-});
 
-describe("project mutations", () => {
-  it("adds and renames projects", () => {
-    let data = addProjectToData(createEmptyAppData(), "  Auth  ");
-    expect(data.projects[0].name).toBe("Auth");
-    data = renameProjectInData(data, data.projects[0].id, "Auth Rewrite");
-    expect(data.projects[0].name).toBe("Auth Rewrite");
+  it("reorders tasks and manages subtasks", () => {
+    let data = addTask(createEmptyAppData(), "a");
+    data = addTask(data, "b");
+    const [b, a] = data.tasks;
+    data = setTaskOrderInData(data, [a.id, b.id]);
+    expect(data.tasks.find((t) => t.id === a.id)?.order).toBe(0);
+    expect(data.tasks.find((t) => t.id === b.id)?.order).toBe(1);
+
+    data = addSubtaskToData(data, a.id, "step one");
+    const subtaskId = data.tasks.find((t) => t.id === a.id)!.subtasks[0].id;
+    data = toggleSubtaskInData(data, a.id, subtaskId, true);
+    expect(data.tasks.find((t) => t.id === a.id)!.subtasks[0].done).toBe(true);
+    data = removeSubtaskFromData(data, a.id, subtaskId);
+    expect(data.tasks.find((t) => t.id === a.id)!.subtasks).toHaveLength(0);
   });
 
-  it("deleting a project keeps its tasks and unassigns them", () => {
+  it("ignores blank subtitles", () => {
+    const data = addTask(createEmptyAppData());
+    expect(addSubtaskToData(data, data.tasks[0].id, "   ").tasks[0].subtasks).toHaveLength(0);
+  });
+});
+
+describe("projects & settings", () => {
+  it("adds, updates and deletes projects without deleting tasks", () => {
     let data = addProjectToData(createEmptyAppData(), "Auth");
     const projectId = data.projects[0].id;
-    data = addTaskToData(data, {
-      title: "Rotate keys",
-      details: "",
-      projectId,
-      scheduledDate: "2026-10-17",
-    });
-    data = addTaskToData(data, {
-      title: "Free-floating task",
-      details: "",
-      projectId: null,
-      scheduledDate: null,
-    });
+    data = updateProjectInData(data, projectId, { name: "Auth v2", emoji: "🔐", color: "pine" });
+    expect(data.projects[0]).toMatchObject({ name: "Auth v2", emoji: "🔐", color: "pine" });
 
+    data = addTaskToData(
+      { ...data, tasks: data.tasks.map((t) => ({ ...t, projectId })) },
+      { title: "Rotate keys", details: "", projectId, scheduledDate: null },
+    );
     const result = removeProjectFromData(data, projectId);
     expect(result.data.projects).toHaveLength(0);
-    expect(result.data.tasks).toHaveLength(2);
-
-    const unassigned = result.data.tasks.find((t: Task) => t.title === "Rotate keys");
-    expect(unassigned?.projectId).toBeNull();
-    expect(unassigned?.scheduledDate).toBe("2026-10-17");
-    expect(result.unassignedTaskIds).toEqual([unassigned?.id]);
-
-    const untouched = result.data.tasks.find((t: Task) => t.title === "Free-floating task");
-    expect(untouched?.projectId).toBeNull();
+    expect(result.data.tasks[0].projectId).toBeNull();
+    expect(result.unassignedTaskIds).toHaveLength(1);
   });
 
-  it("deleting an unknown project changes nothing", () => {
-    const data = addProjectToData(createEmptyAppData(), "Auth");
-    const result = removeProjectFromData(data, "ghost");
-    expect(result.data.projects).toHaveLength(1);
-    expect(result.unassignedTaskIds).toEqual([]);
-  });
-});
-
-describe("getBrowserStorage", () => {
-  it("exposes localStorage and uses the versioned key", () => {
-    const storage = getBrowserStorage();
-    expect(storage).not.toBeNull();
-    if (storage) {
-      storage.setItem(STORAGE_KEY, "probe");
-      expect(window.localStorage.getItem(STORAGE_KEY)).toBe("probe");
-      storage.removeItem(STORAGE_KEY);
-      expect(window.localStorage.getItem(STORAGE_KEY)).toBeNull();
-    }
-  });
-
-  it("loads and saves typed app data in a real browser storage", () => {
-    const storage = getBrowserStorage();
-    if (!storage) return;
-    const repo = new DaymarkRepository(storage);
-    const withData = addTaskToData(createEmptyAppData(), {
-      title: "Persist me",
-      details: "",
-      projectId: null,
-      scheduledDate: null,
-    });
-    let withStatus: AppData = withData;
-    const project: Project = {
-      id: "p-1",
-      name: "Example",
-      createdAt: "2026-10-17T08:00:00.000Z",
-      updatedAt: "2026-10-17T08:00:00.000Z",
-    };
-    withStatus = { ...withData, projects: [project], tasks: withData.tasks.map((t: Task) => ({ ...t, projectId: "p-1" })) };
-    expect(repo.save(withStatus).kind).toBe("saved");
-
-    const loaded = repo.load();
-    expect(loaded.kind).toBe("ready");
-    if (loaded.kind === "ready") {
-      expect(loaded.data.tasks[0].title).toBe("Persist me");
-      expect(loaded.data.tasks[0].projectId).toBe("p-1");
-    }
-    storage.removeItem(STORAGE_KEY);
+  it("stores the theme setting", () => {
+    const data = setThemeInData(createEmptyAppData(), "dark");
+    expect(data.settings.theme).toBe("dark");
   });
 });

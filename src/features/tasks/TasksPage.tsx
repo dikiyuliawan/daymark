@@ -1,26 +1,32 @@
 import { useMemo, useState } from "react";
 import { useApp } from "../../app/store";
-import { TaskRow } from "../../components/TaskRow";
+import { TaskGroup } from "../../components/TaskGroup";
 import { EmptyState } from "../../components/EmptyState";
+import { PageHeading } from "../../components/PageHeading";
+import { Split } from "../../components/Split";
+import { Dropdown } from "../../components/Dropdown";
 import { TaskStatus, statusLabel } from "../../domain/types";
+import { groupTasks } from "./grouping";
 
 type StatusFilter = "all" | TaskStatus;
 type ProjectFilter = "all" | "none" | string;
 
+const STATUS_CHIPS: { value: StatusFilter; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "todo", label: statusLabel("todo") },
+  { value: "in_progress", label: statusLabel("in_progress") },
+  { value: "done", label: statusLabel("done") },
+];
+
 export function TasksPage() {
-  const { data, todayKey, openCreate, openEdit, updateTask } = useApp();
+  const { data, todayKey, openCreate } = useApp();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [projectFilter, setProjectFilter] = useState<ProjectFilter>("all");
 
   const visible = useMemo(() => {
-    const tasks = [...data.tasks].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-    return tasks.filter((task) => {
-      if (statusFilter !== "all" && task.status !== statusFilter) {
-        return false;
-      }
-      if (projectFilter === "none" && task.projectId !== null) {
-        return false;
-      }
+    return data.tasks.filter((task) => {
+      if (statusFilter !== "all" && task.status !== statusFilter) return false;
+      if (projectFilter === "none" && task.projectId !== null) return false;
       if (projectFilter !== "all" && projectFilter !== "none" && task.projectId !== projectFilter) {
         return false;
       }
@@ -28,79 +34,79 @@ export function TasksPage() {
     });
   }, [data.tasks, statusFilter, projectFilter]);
 
+  const groups = useMemo(() => groupTasks(visible, todayKey), [visible, todayKey]);
+  const total = data.tasks.length;
+
   return (
     <>
-      <div className="page-heading">
-        <div>
-          <h1 className="page-title">Tasks</h1>
-          <p className="page-desc">Everything you captured, newest first.</p>
-        </div>
-        <button type="button" className="btn btn-primary" onClick={() => openCreate()}>
-          Add task
-        </button>
-      </div>
-      {data.tasks.length > 0 ? (
-        <div className="filters">
-          <label className="filter">
-            <span>Status</span>
-            <select
-              className="select select-quiet"
-              value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}
-            >
-              <option value="all">All</option>
-              <option value="todo">{statusLabel("todo")}</option>
-              <option value="in_progress">{statusLabel("in_progress")}</option>
-              <option value="done">{statusLabel("done")}</option>
-            </select>
-          </label>
-          <label className="filter">
-            <span>Project</span>
-            <select
-              className="select select-quiet"
-              value={projectFilter}
-              onChange={(event) => setProjectFilter(event.target.value)}
-            >
-              <option value="all">All</option>
-              <option value="none">No project</option>
-              {data.projects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.name}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-      ) : null}
-      {visible.length === 0 ? (
-        data.tasks.length === 0 ? (
-          <EmptyState title="No tasks yet.">
-            <button type="button" className="btn btn-primary" onClick={() => openCreate()}>
-              Add your first task
-            </button>
-          </EmptyState>
+      <PageHeading
+        kicker={total === 0 ? "No tasks" : `${total} task${total === 1 ? "" : "s"}`}
+        title="Tasks"
+        description="Everything you captured, grouped by when it is due."
+        actions={
+          <button type="button" className="btn btn-primary" onClick={() => openCreate()}>
+            Add task
+          </button>
+        }
+      />
+      <Split
+        side={
+          total > 0 ? (
+            <div className="side-card panel">
+              <div className="chip-row" role="group" aria-label="Status">
+                {STATUS_CHIPS.map((chip) => (
+                  <button
+                    key={chip.value}
+                    type="button"
+                    className={`chip${statusFilter === chip.value ? " is-on" : ""}`}
+                    aria-pressed={statusFilter === chip.value}
+                    onClick={() => setStatusFilter(chip.value)}
+                  >
+                    {chip.label}
+                  </button>
+                ))}
+              </div>
+              <Dropdown
+                variant="filter"
+                label="Project"
+                value={projectFilter}
+                onChange={setProjectFilter}
+                options={[
+                  { value: "all", label: "All projects" },
+                  { value: "none", label: "No project" },
+                  ...data.projects.map((project) => ({ value: project.id, label: project.name })),
+                ]}
+              />
+              <p className="muted small">
+                Showing {visible.length} of {total}
+              </p>
+            </div>
+          ) : null
+        }
+      >
+        {visible.length === 0 ? (
+          total === 0 ? (
+            <EmptyState kicker="Start here" title="No tasks yet.">
+              <button type="button" className="btn btn-primary" onClick={() => openCreate()}>
+                Add your first task
+              </button>
+            </EmptyState>
+          ) : (
+            <EmptyState kicker="Filtered" title="No tasks match these filters." />
+          )
         ) : (
-          <EmptyState title="No tasks match these filters." />
-        )
-      ) : (
-        <ul className="task-list">
-          {visible.map((task) => (
-            <TaskRow
-              key={task.id}
-              task={task}
-              projects={data.projects}
-              onOpen={openEdit}
-              onStatusChange={(id, status) => updateTask(id, { status })}
-              onToggleToday={(id, on) => updateTask(id, { scheduledDate: on ? todayKey : null })}
-            />
-          ))}
-        </ul>
-      )}
-      {data.tasks.length === 0 ? (
-        <p className="page-footnote">
-          Tasks can optionally belong to a project — a title alone is enough to capture one.
-        </p>
-      ) : null}
+          <div className="groups">
+            {groups.map((group) => (
+              <TaskGroup
+                key={group.key}
+                title={group.label}
+                tasks={group.tasks}
+                projects={data.projects}
+              />
+            ))}
+          </div>
+        )}
+      </Split>
     </>
   );
 }

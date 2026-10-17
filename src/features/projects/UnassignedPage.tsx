@@ -1,45 +1,57 @@
 import { useApp } from "../../app/store";
 import { navigate } from "../../app/router";
-import { TaskRow } from "../../components/TaskRow";
+import { TaskGroup } from "../../components/TaskGroup";
 import { EmptyState } from "../../components/EmptyState";
+import { PageHeading } from "../../components/PageHeading";
+import { Split } from "../../components/Split";
+import { groupTasks } from "../tasks/grouping";
 
 export function UnassignedPage() {
-  const { data, todayKey, openCreate, openEdit, updateTask } = useApp();
-  const tasks = [...data.tasks]
-    .filter((task) => task.projectId === null)
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const { data, todayKey, openCreate } = useApp();
+  const tasks = data.tasks.filter((task) => task.projectId === null);
+  const groups = groupTasks(tasks, todayKey);
 
   return (
     <>
-      <div className="page-heading">
-        <div>
-          <button type="button" className="link-button" onClick={() => navigate("/projects")}>
-            ← Projects
+      <PageHeading
+        back={{ label: "Projects", onClick: () => navigate("/projects") }}
+        kicker={tasks.length === 1 ? "1 task" : `${tasks.length} tasks`}
+        title="No project"
+        description="Tasks that aren’t assigned to any project."
+        actions={
+          <button type="button" className="btn btn-primary" onClick={() => openCreate()}>
+            Add task
           </button>
-          <h1 className="page-title">No project</h1>
-          <p className="page-desc">Tasks that aren't assigned to any project.</p>
-        </div>
-        <button type="button" className="btn btn-primary" onClick={() => openCreate()}>
-          Add task
-        </button>
-      </div>
-      {tasks.length === 0 ? (
-        <EmptyState title="Every task has a project right now." />
-      ) : (
-        <ul className="task-list">
-          {tasks.map((task) => (
-            <TaskRow
-              key={task.id}
-              task={task}
-              projects={data.projects}
-              showProject={false}
-              onOpen={openEdit}
-              onStatusChange={(id, status) => updateTask(id, { status })}
-              onToggleToday={(id, on) => updateTask(id, { scheduledDate: on ? todayKey : null })}
-            />
-          ))}
-        </ul>
-      )}
+        }
+      />
+      <Split
+        side={
+          <div className="side-card panel">
+            <span className="field-label">Unassigned</span>
+            <p className="muted small">
+              {tasks.length === 0
+                ? "Every task belongs to a project right now."
+                : `${tasks.length} task${tasks.length === 1 ? "" : "s"} without a project.`}
+            </p>
+          </div>
+        }
+      >
+        {tasks.length === 0 ? (
+          <EmptyState kicker="All clear" title="Every task has a project right now." />
+        ) : (
+          <div className="groups">
+            {groups.map((group) => (
+              <TaskGroup
+                key={group.key}
+                title={group.label}
+                tasks={group.tasks}
+                projects={data.projects}
+                showProject={false}
+              />
+            ))}
+          </div>
+        )}
+      </Split>
     </>
   );
 }

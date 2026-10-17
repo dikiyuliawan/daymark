@@ -10,16 +10,33 @@ import {
 } from "react";
 import {
   AppData,
+  FocusSession,
   NewTaskInput,
   Project,
+  Settings,
   Task,
   TaskPatch,
+  ThemeMode,
   createEmptyAppData,
 } from "../domain/types";
 import { localDateKey } from "../domain/localDate";
-import { DaymarkRepository } from "../data/repository";
+import {
+  addFocusSessionToData,
+  addProjectToData,
+  addSubtaskToData,
+  addTaskToData,
+  DaymarkRepository,
+  insertTask,
+  removeProjectFromData,
+  removeSubtaskFromData,
+  removeTaskFromData,
+  setTaskOrderInData,
+  setThemeInData,
+  toggleSubtaskInData,
+  updateProjectInData,
+  updateTaskInData,
+} from "../data/repository";
 import { getBrowserStorage } from "../data/storage";
-import { generateId, nowIso } from "../data/utils";
 
 export type LoadState =
   | { kind: "loading" }
@@ -43,6 +60,7 @@ type AppApi = {
   load: LoadState;
   saveError: string | null;
   editor: EditorState;
+  resolvedTheme: "light" | "dark";
   openCreate: (defaults?: EditorDefaults) => void;
   openEdit: (taskId: string) => void;
   closeEditor: () => void;
@@ -50,15 +68,31 @@ type AppApi = {
   updateTask: (id: string, patch: TaskPatch) => void;
   removeTask: (id: string) => Task | null;
   restoreTask: (task: Task) => void;
+  setTaskOrder: (idsInOrder: string[]) => void;
+  addSubtask: (taskId: string, title: string) => void;
+  toggleSubtask: (taskId: string, subtaskId: string, done: boolean) => void;
+  removeSubtask: (taskId: string, subtaskId: string) => void;
   addProject: (name: string) => void;
-  renameProject: (id: string, name: string) => void;
+  updateProject: (
+    id: string,
+    patch: Partial<Pick<Project, "name" | "emoji" | "color">>,
+  ) => void;
   removeProject: (id: string) => void;
+  addFocusSession: (session: Omit<FocusSession, "id">) => void;
+  setTheme: (theme: ThemeMode) => void;
   dismissRecovery: () => void;
   startFresh: () => void;
   dismissSaveError: () => void;
 };
 
 const AppContext = createContext<AppApi | null>(null);
+
+function prefersDark(): boolean {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+    return false;
+  }
+  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+}
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const repositoryRef = useRef<DaymarkRepository | null>(null);
@@ -71,6 +105,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<AppData>(createEmptyAppData);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [editor, setEditor] = useState<EditorState>(null);
+  const [systemDark, setSystemDark] = useState(prefersDark);
 
   useEffect(() => {
     const outcome = repositoryRef.current!.load();
@@ -78,8 +113,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setData(outcome.data);
       setLoad({ kind: "ready" });
     } else if (outcome.kind === "corrupt") {
-      // Malformed or unsupported data is kept untouched in storage; the app
-      // starts from an empty working set and asks the user how to proceed.
       setData(createEmptyAppData());
       setLoad({ kind: "corrupt", reason: outcome.reason });
     } else {
@@ -97,146 +130,159 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return () => window.clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+      return;
+    }
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const onChange = (event: MediaQueryListEvent) => setSystemDark(event.matches);
+    media.addEventListener("change", onChange);
+    return () => media.removeEventListener("change", onChange);
+  }, []);
+
+  const resolvedTheme: "light" | "dark" =
+    data.settings.theme === "system"
+      ? systemDark
+        ? "dark"
+        : "light"
+      : data.settings.theme;
+
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      document.documentElement.dataset.theme = resolvedTheme;
+      document.documentElement.style.colorScheme = resolvedTheme;
+    }
+  }, [resolvedTheme]);
+
   const persist = useCallback((next: AppData) => {
     setData(next);
     const outcome = repositoryRef.current!.save(next);
     setSaveError(outcome.kind === "saved" ? null : SAVE_ERROR_MESSAGE);
   }, []);
 
+  const dataRef = useRef(data);
+  dataRef.current = data;
+
   const openCreate = useCallback((defaults?: EditorDefaults) => {
     setEditor(defaults ? { mode: "create", defaults } : { mode: "create" });
   }, []);
-
-  const openEdit = useCallback((taskId: string) => {
-    setEditor({ mode: "edit", taskId });
-  }, []);
-
-  const closeEditor = useCallback(() => {
-    setEditor(null);
-  }, []);
+  const openEdit = useCallback((taskId: string) => setEditor({ mode: "edit", taskId }), []);
+  const closeEditor = useCallback(() => setEditor(null), []);
 
   const addTask = useCallback(
     (input: NewTaskInput) => {
-      const timestamp = nowIso();
-      const task: Task = {
-        id: generateId(),
-        title: input.title.trim(),
-        details: input.details,
-        status: "todo",
-        projectId: input.projectId,
-        scheduledDate: input.scheduledDate,
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      };
-      persist({ ...data, tasks: [task, ...data.tasks] });
-      return task;
+      const next = addTaskToData(dataRef.current, input);
+      persist(next);
+      return next.tasks[0];
     },
-    [data, persist],
+    [persist],
   );
 
   const updateTask = useCallback(
     (id: string, patch: TaskPatch) => {
-      const timestamp = nowIso();
-      persist({
-        ...data,
-        tasks: data.tasks.map((task) =>
-          task.id === id ? { ...task, ...patch, updatedAt: timestamp } : task,
-        ),
-      });
+      const next = updateTaskInData(dataRef.current, id, patch);
+      if (next !== null) {
+        persist(next);
+      }
     },
-    [data, persist],
+    [persist],
   );
-
-  // Latest app data, readable from callbacks that outlive a render (e.g. a
-  // toast Undo action created in an earlier render cycle).
-  const dataRef = useRef(data);
-  dataRef.current = data;
 
   const removeTask = useCallback(
     (id: string) => {
       const current = dataRef.current;
       const removed = current.tasks.find((task) => task.id === id) ?? null;
-      persist({ ...current, tasks: current.tasks.filter((task) => task.id !== id) });
+      const next = removeTaskFromData(current, id);
+      if (next !== null) {
+        persist(next);
+      }
       return removed;
     },
     [persist],
   );
 
-  // Undo for deletions: reinsert the untouched task object at the top of the
-  // list (closest observable equivalent to "never deleted"). Reads latest
-  // data through the ref so it stays correct across intervening writes.
   const restoreTask = useCallback(
     (task: Task) => {
-      const current = dataRef.current;
-      persist({
-        ...current,
-        tasks: [task, ...current.tasks.filter((t) => t.id !== task.id)],
-      });
+      persist(insertTask(dataRef.current, task));
+    },
+    [persist],
+  );
+
+  const setTaskOrder = useCallback(
+    (idsInOrder: string[]) => {
+      persist(setTaskOrderInData(dataRef.current, idsInOrder));
+    },
+    [persist],
+  );
+
+  const addSubtask = useCallback(
+    (taskId: string, title: string) => {
+      persist(addSubtaskToData(dataRef.current, taskId, title));
+    },
+    [persist],
+  );
+
+  const toggleSubtask = useCallback(
+    (taskId: string, subtaskId: string, done: boolean) => {
+      persist(toggleSubtaskInData(dataRef.current, taskId, subtaskId, done));
+    },
+    [persist],
+  );
+
+  const removeSubtask = useCallback(
+    (taskId: string, subtaskId: string) => {
+      persist(removeSubtaskFromData(dataRef.current, taskId, subtaskId));
     },
     [persist],
   );
 
   const addProject = useCallback(
     (name: string) => {
-      const timestamp = nowIso();
-      const project: Project = {
-        id: generateId(),
-        name: name.trim(),
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      };
-      persist({ ...data, projects: [...data.projects, project] });
+      persist(addProjectToData(dataRef.current, name));
     },
-    [data, persist],
+    [persist],
   );
 
-  const renameProject = useCallback(
-    (id: string, name: string) => {
-      const timestamp = nowIso();
-      persist({
-        ...data,
-        projects: data.projects.map((project) =>
-          project.id === id
-            ? { ...project, name: name.trim(), updatedAt: timestamp }
-            : project,
-        ),
-      });
+  const updateProject = useCallback(
+    (id: string, patch: Partial<Pick<Project, "name" | "emoji" | "color">>) => {
+      persist(updateProjectInData(dataRef.current, id, patch));
     },
-    [data, persist],
+    [persist],
   );
 
-  // A deleted project never takes its tasks with it: affected tasks simply
-  // become unassigned.
   const removeProject = useCallback(
     (id: string) => {
-      const timestamp = nowIso();
-      persist({
-        ...data,
-        projects: data.projects.filter((project) => project.id !== id),
-        tasks: data.tasks.map((task) =>
-          task.projectId === id
-            ? { ...task, projectId: null, updatedAt: timestamp }
-            : task,
-        ),
-      });
+      const { data: next } = removeProjectFromData(dataRef.current, id);
+      persist(next);
     },
-    [data, persist],
+    [persist],
   );
 
-  const dismissRecovery = useCallback(() => {
-    setLoad({ kind: "ready" });
-  }, []);
+  const addFocusSession = useCallback(
+    (session: Omit<FocusSession, "id">) => {
+      persist(addFocusSessionToData(dataRef.current, session));
+    },
+    [persist],
+  );
+
+  const setTheme = useCallback(
+    (theme: ThemeMode) => {
+      persist(setThemeInData(dataRef.current, theme));
+    },
+    [persist],
+  );
+
+  const dismissRecovery = useCallback(() => setLoad({ kind: "ready" }), []);
 
   const startFresh = useCallback(() => {
-    const outcome = repositoryRef.current!.save(createEmptyAppData());
-    setData(createEmptyAppData());
+    const empty = createEmptyAppData();
+    const outcome = repositoryRef.current!.save(empty);
+    setData(empty);
     setLoad({ kind: "ready" });
     setSaveError(outcome.kind === "saved" ? null : SAVE_ERROR_MESSAGE);
   }, []);
 
-  const dismissSaveError = useCallback(() => {
-    setSaveError(null);
-  }, []);
+  const dismissSaveError = useCallback(() => setSaveError(null), []);
 
   const value = useMemo<AppApi>(
     () => ({
@@ -245,6 +291,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       load,
       saveError,
       editor,
+      resolvedTheme,
       openCreate,
       openEdit,
       closeEditor,
@@ -252,9 +299,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
       updateTask,
       removeTask,
       restoreTask,
+      setTaskOrder,
+      addSubtask,
+      toggleSubtask,
+      removeSubtask,
       addProject,
-      renameProject,
+      updateProject,
       removeProject,
+      addFocusSession,
+      setTheme,
       dismissRecovery,
       startFresh,
       dismissSaveError,
@@ -265,6 +318,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       load,
       saveError,
       editor,
+      resolvedTheme,
       openCreate,
       openEdit,
       closeEditor,
@@ -272,9 +326,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
       updateTask,
       removeTask,
       restoreTask,
+      setTaskOrder,
+      addSubtask,
+      toggleSubtask,
+      removeSubtask,
       addProject,
-      renameProject,
+      updateProject,
       removeProject,
+      addFocusSession,
+      setTheme,
       dismissRecovery,
       startFresh,
       dismissSaveError,
@@ -291,3 +351,5 @@ export function useApp(): AppApi {
   }
   return value;
 }
+
+export type { Settings };

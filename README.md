@@ -1,52 +1,72 @@
 # Daymark
 
-A small, local-first workbench for programmers: capture a task, decide whether it belongs to today, and keep moving. This is POC v0.1 for a single person — there is no server, no account, and no sync.
+A local-first workbench for programmers: capture a task, decide whether it belongs to today, and keep moving. No server, no account, no sync — everything lives in your browser.
+
+The interface follows a modern mobile-app language (floating tab bar, grouped list panels, tinted icon tiles, light/dark themes) adapted to a calm, pine-accented palette.
 
 ## Getting started
 
 ```bash
 npm install
-npm run dev        # start the dev server (prints a local URL)
+npm run dev
 ```
 
-No credentials, environment variables, or network access are needed — the app runs entirely in your browser.
+No credentials, environment variables, or network access are needed.
 
 ## Commands
 
 | Command | What it does |
 | --- | --- |
-| `npm run dev` | Start Vite dev server with hot reload |
-| `npm run build` | Typecheck and produce a production build in `dist/` |
-| `npm run preview` | Serve the production build locally |
-| `npm test` | Run the test suite once (Vitest + jsdom) |
+| `npm run dev` | Start the Vite dev server |
+| `npm run build` | Typecheck and build to `dist/` |
+| `npm run preview` | Serve the production build |
+| `npm test` | Run the Vitest suite once |
 | `npm run test:watch` | Run tests in watch mode |
-| `npm run typecheck` | TypeScript check with no output files |
-| `npm run lint` | ESLint over the repository |
+| `npm run typecheck` | TypeScript check, no output |
+| `npm run lint` | ESLint |
 
-## What it does
+## Screens
 
-- **Quick capture** — press `N` (or any **New task** button) to save a task with just a title; details, project, and *Add to Today* are optional and never block capture.
-- **Task list** — every task, newest first, with quiet status (Todo / In Progress / Done) and project filters, including *No project*.
-- **Projects** — optional labels that group tasks. Deleting a project keeps its tasks and makes them unassigned after explicit confirmation.
-- **Today** — tasks scheduled for the current local calendar date, with completed work in a quieter *Done today* section. *Add to Today* stores today's local date (`YYYY-MM-DD`); removing clears it, and yesterday's items never silently slide onto today's list.
-- **Recoverable actions** — deleting a task shows an *Undo* toast; nothing destructive is ever a side effect of changing status.
+- **Today** — a completion hero (`done / planned`), a 7-day bar chart, your current streak, and grouped panels for planned and completed work.
+- **Tasks** — every task grouped into Overdue / Today / Upcoming / No date / Completed, with status chips and a project filter.
+- **Projects** — simple labels with tinted tiles; each project has a detail view with inline rename, an emoji/colour editor, and delete. Deleting a project keeps its tasks and unassigns them.
+- **Focus** — a Pomodoro-style timer with 15/25/50-minute presets; completed sessions are logged against the day.
+- **Search** — reachable from the top bar, matches titles, details, and project names, grouped by project.
 
-## How your data is stored
+## Features
 
-All data lives in this browser's `localStorage` under the versioned key `daymark:data:v1`, written through a typed repository module that validates and normalizes data on load.
+- **Quick capture** — press `N` or the **Add** tab to save a task with just a title. Details, project, due date, priority, icon, and *Add to Today* are all optional.
+- **Subtasks** — a checklist inside each task with `done/total` progress on the row.
+- **Priority & due date** — flag a task Low/Medium/High and give it a due date; overdue items are flagged in the list.
+- **Emoji & colour** — give any task or project a tinted icon tile from a fixed palette.
+- **Drag reorder** — reorder tasks with the row grip (mouse) or `Alt+↑` / `Alt+↓` (keyboard).
+- **Today membership** — add or remove a task from Today from the row or the editor; the date is the current local calendar day.
+- **Light / dark theme** — follows your system by default; the top-bar button cycles system → light → dark and persists the choice.
+- **Undo** — deleting a task shows a toast with Undo; nothing destructive happens as a side effect of changing status.
 
-- Tasks and projects persist across refreshes in the **same browser only**. There is no cloud sync, no account, and no backup — clearing site data erases everything.
-- If saved data is malformed or from an unsupported schema version, Daymark shows a recovery banner and preserves the raw value in storage untouched until you choose to continue or clear it.
-- If a write fails (quota exceeded, storage blocked), a visible banner says so — the app never claims a save succeeded when it didn't.
+## How data is stored
+
+Everything is kept in `localStorage` under the versioned key `daymark:data:v2`, behind a typed repository that validates and normalizes data on load.
+
+- Data persists across refreshes in the **same browser only** — no cloud sync, no backup. Clearing site data erases everything.
+- Data written by the older `daymark:data:v1` key is **migrated automatically** on first load (new fields defaulted; completed tasks get a `completedAt`).
+- Malformed data or an unsupported version shows a recovery banner and leaves the stored value untouched rather than silently resetting.
+- A failed write (quota or blocked storage) is reported visibly; the app never claims a save succeeded when it didn't.
 
 ## Privacy
 
-No analytics, no telemetry, no external API calls. Task and project content never leaves the browser and is not placed in URLs.
+No analytics, no telemetry, no external requests. Task content never leaves the browser and never appears in URLs.
 
-## Testing
+## Tech
 
-Automated tests cover the foundations and the core flows: local-date helpers and their independence from UTC, runtime validation of stored data (including corrupt payloads and unsupported versions), repository persistence round-trips and storage-failure outcomes, project deletion that preserves and unassigns tasks, and end-to-end flows (capture across reloads, Today membership, status transitions, filters, delete-with-undo) rendered through jsdom.
+Vite + React + TypeScript, one CSS token layer (system font stack, no webfonts), `localStorage` behind a validating repository, and a small hash router (`#/today`, `#/tasks`, `#/projects/:id`, `#/focus`, `#/search`, `#/unassigned`).
 
-## Deferred scope (intentionally not built)
+## Tests
 
-Focus timers, dependencies/priorities/due dates/recurring tasks, notes or daily updates, global search, backup import/export, settings or theme switching, accounts/multi-device/collaboration, comments/mentions/activity feeds, and GitHub/GitLab integrations. The UI contains no placeholders for these.
+```
+src/domain/*.test.ts        validation + v1→v2 migration, date math, stats, reorder
+src/data/*.test.ts          repository round-trips, migration, storage failures, mutations
+src/components/*.test.tsx   Dropdown, SubtasksEditor, EmojiColorPicker, FocusTimer
+src/features/app.test.tsx   end-to-end flows: capture, Today, status, projects, delete+undo,
+                            subtasks, priority/due date, search, keyboard reorder, theme, focus
+```

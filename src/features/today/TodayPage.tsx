@@ -1,82 +1,77 @@
 import { useMemo } from "react";
 import { useApp } from "../../app/store";
-import { navigate } from "../../app/router";
-import { TaskRow } from "../../components/TaskRow";
+import { TaskGroup } from "../../components/TaskGroup";
+import { StatHero } from "../../components/StatHero";
+import { ProgressBars } from "../../components/ProgressBars";
 import { EmptyState } from "../../components/EmptyState";
-import { formatLocalDate, localDateKey } from "../../domain/localDate";
+import { PageHeading } from "../../components/PageHeading";
+import { Split } from "../../components/Split";
+import { currentStreak, doneToday, last7Days, plannedToday } from "../../domain/stats";
+import { formatLocalDate } from "../../domain/localDate";
+import { sortByOrder } from "../../domain/reorder";
 
 export function TodayPage() {
-  const { data, todayKey, openCreate, openEdit, updateTask } = useApp();
+  const { data, todayKey, openCreate } = useApp();
 
-  const scheduled = useMemo(() => {
-    return data.tasks.filter((task) => task.scheduledDate === todayKey);
-  }, [data.tasks, todayKey]);
-
+  const scheduled = useMemo(
+    () => sortByOrder(data.tasks.filter((task) => task.scheduledDate === todayKey)),
+    [data.tasks, todayKey],
+  );
   const active = scheduled.filter((task) => task.status !== "done");
   const done = scheduled.filter((task) => task.status === "done");
-  const isEmpty = scheduled.length === 0;
+  const doneCount = doneToday(data.tasks, todayKey);
+  const planned = plannedToday(data.tasks, todayKey);
+  const streak = currentStreak(data.tasks, todayKey);
+  const days = last7Days(data.tasks, todayKey);
 
   return (
     <>
-      <div className="page-heading">
-        <div>
-          <h1 className="page-title">Today</h1>
-          <p className="page-desc">{formatLocalDate(localDateKey())}</p>
-        </div>
-        <button type="button" className="btn btn-primary" onClick={() => openCreate({ addToToday: true })}>
-          Add task
-        </button>
-      </div>
-      {isEmpty ? (
-        <EmptyState title="Nothing is planned for today yet.">
+      <PageHeading
+        kicker={formatLocalDate(todayKey)}
+        title="Today"
+        actions={
           <button
             type="button"
             className="btn btn-primary"
             onClick={() => openCreate({ addToToday: true })}
           >
-            Add a task
+            Add task
           </button>
-        </EmptyState>
-      ) : (
-        <>
-          {active.length > 0 ? (
-            <ul className="task-list">
-              {active.map((task) => (
-                <TaskRow
-                  key={task.id}
-                  task={task}
-                  projects={data.projects}
-                  onOpen={openEdit}
-                  onStatusChange={(id, status) => updateTask(id, { status })}
-                  onToggleToday={(id) => updateTask(id, { scheduledDate: null })}
-                />
-              ))}
-            </ul>
-          ) : null}
-          {done.length > 0 ? (
-            <>
-              <h2 className="section-heading-quiet">Done today</h2>
-              <ul className="task-list task-list-quiet">
-                {done.map((task) => (
-                  <TaskRow
-                    key={task.id}
-                    task={task}
-                    projects={data.projects}
-                    onOpen={openEdit}
-                    onStatusChange={(id, status) => updateTask(id, { status })}
-                    onToggleToday={(id) => updateTask(id, { scheduledDate: null })}
-                  />
-                ))}
-              </ul>
-            </>
-          ) : null}
-        </>
-      )}
-      {scheduled.length > 0 ? (
-        <p className="page-footnote">
-          Need something for later? <button type="button" className="link-button" onClick={() => navigate("/tasks")}>Open the full task list</button>.
-        </p>
-      ) : null}
+        }
+      />
+      <Split
+        side={
+          <StatHero
+            label="Completed today"
+            value={doneCount}
+            total={planned > 0 ? planned : undefined}
+            pill={streak > 0 ? `🔥 ${streak}-day streak` : "Complete one to start a streak"}
+          >
+            <ProgressBars days={days} todayKey={todayKey} />
+          </StatHero>
+        }
+      >
+        {scheduled.length === 0 ? (
+          <EmptyState kicker="Clear" title="Nothing planned for today yet.">
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => openCreate({ addToToday: true })}
+            >
+              Add a task
+            </button>
+          </EmptyState>
+        ) : (
+          <div className="groups">
+            {active.length > 0 ? (
+              <TaskGroup title="Planned" tasks={active} projects={data.projects} />
+            ) : null}
+            {done.length > 0 ? (
+              <TaskGroup title="Done today" tasks={done} projects={data.projects} />
+            ) : null}
+          </div>
+        )}
+      </Split>
     </>
   );
 }
