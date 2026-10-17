@@ -1,0 +1,10 @@
+import { ReactNode } from "react";
+
+export function EmptyState({ title, children }: { title: string; children?: ReactNode }) {
+  return (
+    <div className="empty-state">
+      <p className="empty-title">{title}</p>
+      {children ? <div className="empty-actions">{children}</div> : null}
+    </div>
+  );
+}
