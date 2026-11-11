@@ -1500,3 +1500,38 @@
     transition: none;
   }
 }
+
+/* ------------------------------------------------------------------ the row menu */
+
+.menu-list {
+  margin-top: 4px;
+}
+
+.menu-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 52px;
+  padding: 0 4px;
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: none;
+  text-align: left;
+  font-size: var(--t-body);
+  color: var(--ink);
+}
+
+.menu-row svg {
+  flex: none;
+  color: var(--muted);
+}
+
+.menu-row:disabled {
+  color: var(--faint);
+  cursor: default;
+}
+
+.menu-row:disabled svg {
+  color: var(--faint);
+}

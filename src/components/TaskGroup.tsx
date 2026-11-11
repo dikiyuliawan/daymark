@@ -44,6 +44,10 @@ export function TaskGroup({
     setTaskOrder(dropOrder(ids, draggedId, targetId, placeAfter));
   };
 
+  const onSchedule = (taskId: string, dateKey: string | null) => {
+    updateTask(taskId, { scheduledDate: dateKey });
+  };
+
   return (
     <section className="list-group" aria-label={typeof title === "string" ? title : undefined}>
       <p className="list-group-label">
@@ -51,7 +55,7 @@ export function TaskGroup({
         <span className="list-group-count">{tasks.length}</span>
       </p>
       <ul className="list">
-        {tasks.map((task) => (
+        {tasks.map((task, index) => (
           <TaskRow
             key={task.id}
             task={task}
@@ -62,6 +66,9 @@ export function TaskGroup({
             onStatusChange={onStatusChange}
             onToggleToday={onToggleToday}
             onMove={reorderable ? onMove : undefined}
+            onSchedule={onSchedule}
+            canMoveUp={index > 0}
+            canMoveDown={index < tasks.length - 1}
             onDrop={reorderable ? onDrop : undefined}
           />
         ))}

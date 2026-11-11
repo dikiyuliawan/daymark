@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useApp } from "../../app/store";
+import { useToast } from "../../components/ToastProvider";
 import { navigate } from "../../app/router";
 import { FlowShell } from "../../components/FlowShell";
 import { formatDurationLabel } from "../../domain/format";
@@ -38,7 +39,8 @@ function ShutdownItem({ title, meta, checked, onToggle }: ShutdownItemProps) {
  * day. The day closes and the leftovers roll into tomorrow.
  */
 export function ShutdownFlow() {
-  const { data, tasks, todayKey, closeDay } = useApp();
+  const { data, tasks, todayKey, closeDay, undoCloseDay } = useApp();
+  const { showToast } = useToast();
   const [step, setStep] = useState(0);
 
   const todays = useMemo(
@@ -137,6 +139,7 @@ export function ShutdownFlow() {
           className="btn btn--primary"
           onClick={() => {
             closeDay(carry, note);
+            showToast("Day closed", { label: "Undo", onAction: undoCloseDay });
             navigate("/today");
           }}
         >

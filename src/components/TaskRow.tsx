@@ -1,4 +1,4 @@
-import { DragEvent, KeyboardEvent } from "react";
+import { DragEvent, KeyboardEvent, useRef, useState } from "react";
 import {
   Priority,
   Project,
@@ -12,6 +12,7 @@ import { formatDurationClock, formatDurationLabel } from "../domain/format";
 import { Dropdown } from "./Dropdown";
 import { STATUS_CHOICES } from "./statusChoices";
 import { CheckCircle } from "./CheckCircle";
+import { RowAction, RowMenu } from "./RowMenu";
 import { CalendarIcon, FlagIcon, GripIcon, RepeatIcon } from "./icons";
 import { repeatLabel } from "../domain/recurrence";
 
@@ -24,6 +25,9 @@ type TaskRowProps = {
   onStatusChange: (taskId: string, status: TaskStatus) => void;
   onToggleToday: (taskId: string, on: boolean) => void;
   onMove?: (taskId: string, delta: -1 | 1) => void;
+  onSchedule?: (taskId: string, dateKey: string | null) => void;
+  canMoveUp?: boolean;
+  canMoveDown?: boolean;
   onDrop?: (draggedId: string, targetId: string, placeAfter: boolean) => void;
 };
 
@@ -36,6 +40,9 @@ export function TaskRow({
   onStatusChange,
   onToggleToday,
   onMove,
+  onSchedule,
+  canMoveUp = false,
+  canMoveDown = false,
   onDrop,
 }: TaskRowProps) {
   const project =
@@ -50,10 +57,42 @@ export function TaskRow({
   const done = task.status === "done";
   const rowId = `task-${task.id}`;
   const isRitual = task.repeat !== null;
+  const [menuOpen, setMenuOpen] = useState(false);
+  const dragged = useRef(false);
 
   const handleDragStart = (event: DragEvent<HTMLButtonElement>) => {
+    dragged.current = true;
     event.dataTransfer.setData("text/plain", task.id);
     event.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragEnd = () => {
+    // the click that ends a drag must not open the menu
+    window.setTimeout(() => {
+      dragged.current = false;
+    }, 300);
+  };
+
+  const handleGripClick = () => {
+    if (dragged.current) return;
+    setMenuOpen(true);
+  };
+
+  const handleMenuAction = (action: RowAction) => {
+    switch (action) {
+      case "up":
+        onMove?.(task.id, -1);
+        break;
+      case "down":
+        onMove?.(task.id, 1);
+        break;
+      case "today":
+        onSchedule?.(task.id, today);
+        break;
+      case "inbox":
+        onSchedule?.(task.id, null);
+        break;
+    }
   };
 
   const handleDragOver = (event: DragEvent<HTMLLIElement>) => {
@@ -181,11 +220,25 @@ export function TaskRow({
           className="row-grip"
           draggable
           onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+          onClick={handleGripClick}
           onKeyDown={handleGripKeyDown}
-          aria-label={`Reorder "${task.title}" (Alt+Arrow)`}
+          aria-label={`Reorder "${task.title}" (Alt+Arrow, or tap for more actions)`}
         >
           <GripIcon size={16} />
         </button>
+      ) : null}
+
+      {menuOpen ? (
+        <RowMenu
+          title={task.title}
+          onAction={handleMenuAction}
+          onClose={() => setMenuOpen(false)}
+          canMoveUp={canMoveUp}
+          canMoveDown={canMoveDown}
+          inToday={inToday}
+          scheduled={task.scheduledDate !== null && !isRitual}
+        />
       ) : null}
     </li>
   );

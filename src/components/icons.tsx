@@ -106,6 +106,34 @@ export function RepeatIcon({ size = 18, className }: IconProps) {
   );
 }
 
+/** Moving a task up the day. */
+export function ArrowUpIcon({ size = 18, className }: IconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <path d="M12 19V6M6.5 11.5 12 6l5.5 5.5" />
+    </svg>
+  );
+}
+
+/** Moving a task down the day. */
+export function ArrowDownIcon({ size = 18, className }: IconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <path d="M12 5v13M6.5 12.5 12 18l5.5-5.5" />
+    </svg>
+  );
+}
+
+/** The inbox: a task with no day. */
+export function InboxIcon({ size = 18, className }: IconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <path d="M4 13h4l1.5 3h5L16 13h4" />
+      <path d="M5.5 5h13l1.5 8v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-5z" />
+    </svg>
+  );
+}
+
 export function SlidersIcon({ size = 18, className }: IconProps) {
   return (
     <svg {...base(size)} className={className}>

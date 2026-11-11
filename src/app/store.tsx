@@ -93,6 +93,8 @@ type AppApi = {
   setTaskRepeat: (taskId: string, rule: RepeatRule | null) => void;
   carryTasks: (taskIds: string[], dateKey: string | null) => void;
   closeDay: (carryTaskIds: string[], highlight: string) => void;
+  /** Puts the day back the way it was before the last close. */
+  undoCloseDay: () => void;
   dismissRecovery: () => void;
   startFresh: () => void;
   dismissSaveError: () => void;
@@ -318,12 +320,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [persist],
   );
 
+  const lastCloseRef = useRef<AppData | null>(null);
+
   const closeDay = useCallback(
     (carryTaskIds: string[], highlight: string) => {
-      persist(closeDayInData(dataRef.current, todayKeyRef.current, carryTaskIds, highlight));
+      const before = dataRef.current;
+      // keep the day as it was, so closing it can be taken back
+      lastCloseRef.current = {
+        ...before,
+        tasks: [...before.tasks],
+        highlights: [...before.highlights],
+        shutdowns: [...before.shutdowns],
+      };
+      persist(closeDayInData(before, todayKeyRef.current, carryTaskIds, highlight));
     },
     [persist],
   );
+
+  const undoCloseDay = useCallback(() => {
+    const snapshot = lastCloseRef.current;
+    if (snapshot === null) return;
+    lastCloseRef.current = null;
+    persist(snapshot);
+  }, [persist]);
 
   const dismissRecovery = useCallback(() => setLoad({ kind: "ready" }), []);
 
@@ -366,6 +385,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setTaskRepeat,
       carryTasks,
       closeDay,
+      undoCloseDay,
       dismissRecovery,
       startFresh,
       dismissSaveError,
@@ -397,6 +417,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setTaskRepeat,
       carryTasks,
       closeDay,
+      undoCloseDay,
       dismissRecovery,
       startFresh,
       dismissSaveError,

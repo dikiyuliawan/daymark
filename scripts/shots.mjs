@@ -90,6 +90,14 @@ const SCENES = [
     },
   },
   {
+    name: "move-menu",
+    route: "/tasks",
+    run: async () => {
+      document.querySelector(".row-grip")?.click();
+      await new Promise((resolve) => setTimeout(resolve, 400));
+    },
+  },
+  {
     name: "budget",
     route: "/today",
     run: async () => {

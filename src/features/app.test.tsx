@@ -323,6 +323,29 @@ describe("app integration", () => {
     });
   });
 
+  it("moves a task from the row menu, with no drag and no keyboard", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "New task" }));
+    await submitTaskInDialog(user, "First");
+    await user.click(screen.getByRole("button", { name: "New task" }));
+    await submitTaskInDialog(user, "Second");
+
+    // the newest task sits on top
+    const grip = screen.getByRole("button", { name: /Reorder "Second"/ });
+    await user.click(grip);
+    const menu = screen.getByRole("dialog");
+    await user.click(within(menu).getByRole("button", { name: "Move down" }));
+
+    await waitFor(() => {
+      const tasks = stored().tasks as { title: string; order: number }[];
+      const second = tasks.find((task) => task.title === "Second")!;
+      const first = tasks.find((task) => task.title === "First")!;
+      expect(second.order).toBeGreaterThan(first.order);
+    });
+  });
+
   it("closes the day: what is left rolls over and the note is kept", async () => {
     const user = userEvent.setup();
     render(<App />);
@@ -343,6 +366,14 @@ describe("app integration", () => {
       expect(stored().shutdowns).toContain(localDateKey());
       expect(stored().highlights[0].text).toBe("Shipped the importer");
       expect(stored().tasks[0].scheduledDate).not.toBe(localDateKey());
+    });
+
+    // the day can be taken back: the task returns to where it was
+    await user.click(screen.getByRole("button", { name: "Undo" }));
+    await waitFor(() => {
+      expect(stored().shutdowns).not.toContain(localDateKey());
+      expect(stored().highlights).toHaveLength(0);
+      expect(stored().tasks[0].scheduledDate).toBeNull();
     });
   });
 
