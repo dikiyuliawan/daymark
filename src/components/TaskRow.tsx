@@ -8,6 +8,7 @@ import {
   statusLabel,
 } from "../domain/types";
 import { formatDateCompact, localDateKey } from "../domain/localDate";
+import { formatDurationClock, formatDurationLabel } from "../domain/format";
 import { Dropdown } from "./Dropdown";
 import { STATUS_CHOICES } from "./statusChoices";
 import { CheckCircle } from "./CheckCircle";
@@ -155,7 +156,11 @@ export function TaskRow({
         </div>
       </div>
 
-      {subtaskTotal > 0 ? (
+      {task.durationMin !== null ? (
+        <span className="row-pill" aria-label={`Planned ${formatDurationLabel(task.durationMin)}`}>
+          {formatDurationClock(task.durationMin)}
+        </span>
+      ) : subtaskTotal > 0 ? (
         <span className="row-pill">
           {subtaskDone}/{subtaskTotal}
         </span>

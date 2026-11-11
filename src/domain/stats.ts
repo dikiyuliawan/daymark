@@ -24,6 +24,19 @@ export function plannedToday(tasks: Task[], todayKey: string): number {
   return tasks.filter((task) => task.scheduledDate === todayKey).length;
 }
 
+/**
+ * The planned work on a day: the lengths of the tasks scheduled for it, in
+ * minutes. Tasks without a length add nothing.
+ */
+export function plannedMinutesOn(tasks: Task[], dateKey: string): number {
+  return tasks.reduce((total, task) => {
+    if (task.scheduledDate !== dateKey || task.durationMin === null) {
+      return total;
+    }
+    return total + task.durationMin;
+  }, 0);
+}
+
 export function completedDateKeys(tasks: Task[]): Set<string> {
   const keys = new Set<string>();
   for (const task of tasks) {

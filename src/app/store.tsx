@@ -32,6 +32,7 @@ import {
   removeTaskFromData,
   setTaskOrderInData,
   setThemeInData,
+  setWorkdayMinutesInData,
   toggleSubtaskInData,
   updateProjectInData,
   updateTaskInData,
@@ -81,6 +82,7 @@ type AppApi = {
   removeProject: (id: string) => void;
   addFocusSession: (session: Omit<FocusSession, "id">) => void;
   setTheme: (theme: ThemeMode) => void;
+  setWorkdayMinutes: (minutes: number) => void;
   dismissRecovery: () => void;
   startFresh: () => void;
   dismissSaveError: () => void;
@@ -282,6 +284,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [persist],
   );
 
+  const setWorkdayMinutes = useCallback(
+    (minutes: number) => {
+      persist(setWorkdayMinutesInData(dataRef.current, minutes));
+    },
+    [persist],
+  );
+
   const dismissRecovery = useCallback(() => setLoad({ kind: "ready" }), []);
 
   const startFresh = useCallback(() => {
@@ -318,6 +327,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       removeProject,
       addFocusSession,
       setTheme,
+      setWorkdayMinutes,
       dismissRecovery,
       startFresh,
       dismissSaveError,
@@ -345,6 +355,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       removeProject,
       addFocusSession,
       setTheme,
+      setWorkdayMinutes,
       dismissRecovery,
       startFresh,
       dismissSaveError,

@@ -56,6 +56,28 @@ const SCENES = [
     },
   },
   {
+    name: "focus-task",
+    route: "/focus",
+    run: async () => {
+      document.querySelector(".dropdown-link .dropdown-trigger")?.click();
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      const option = [...document.querySelectorAll(".dropdown-option")].find((o) =>
+        o.textContent?.includes("Document customer feedback"),
+      );
+      option?.click();
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    },
+  },
+  {
+    name: "budget",
+    route: "/today",
+    run: async () => {
+      const figure = document.querySelector(".capacity");
+      figure?.click();
+      await new Promise((resolve) => setTimeout(resolve, 400));
+    },
+  },
+  {
     name: "row-menu",
     route: "/tasks",
     run: async () => {
@@ -125,6 +147,21 @@ const SCENES = [
 ];
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** Wait until the app has rendered its screen, whatever the dev server took. */
+async function waitForApp(cdp, timeout = 15000) {
+  const started = Date.now();
+  while (Date.now() - started < timeout) {
+    const ready = await cdp.evaluate(
+      "!!document.querySelector('.screen') || !!document.querySelector('.loading-note')",
+    );
+    if (ready === true) {
+      await sleep(250);
+      return;
+    }
+    await sleep(200);
+  }
+}
 
 /* Set a controlled input the way a person would, so React sees it. It runs in
    the page (window.__set), because the scenes are evaluated there. */
@@ -264,12 +301,13 @@ async function main() {
     const base = scene.fresh ? BASE.replace(/[?&]demo=1/, "") : BASE;
     const url = `${base}#${scene.route}`;
     await cdp.send("Page.navigate", { url });
-    await sleep(1200);
-    if (scene.fresh) {
-      await cdp.evaluate("localStorage.clear();");
-      await cdp.send("Page.reload", { ignoreCache: false });
-      await sleep(1400);
-    }
+    await sleep(900);
+    await waitForApp(cdp);
+    // Every scene starts from a known store: the demo scenes re-seed it, the
+    // empty ones stay empty.
+    await cdp.evaluate("localStorage.clear();");
+    await cdp.send("Page.reload", { ignoreCache: false });
+    await waitForApp(cdp);
     // The app reads the hash on load; a same-page hash change needs a reload.
     await cdp.send("Page.reload", { ignoreCache: false });
     await sleep(1400);

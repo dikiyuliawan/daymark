@@ -6,6 +6,8 @@ import { ThemeToggle } from "./ThemeToggle";
 type ScreenHeaderProps = {
   title: ReactNode;
   sub?: ReactNode;
+  /** Sits on the right of the line under the title. */
+  subAside?: ReactNode;
   badge?: ReactNode;
   back?: { label: string; onClick: () => void };
   actions?: ReactNode;
@@ -22,6 +24,7 @@ type ScreenHeaderProps = {
 export function ScreenHeader({
   title,
   sub,
+  subAside,
   badge,
   back,
   actions,
@@ -40,7 +43,12 @@ export function ScreenHeader({
           </button>
         ) : null}
         <h1 className={day ? "screen-title day-title" : "screen-title"}>{title}</h1>
-        {sub ? <p className="screen-sub">{sub}</p> : null}
+        {sub || subAside !== undefined ? (
+          <div className="screen-sub-row">
+            {sub ? <p className="screen-sub">{sub}</p> : null}
+            {subAside}
+          </div>
+        ) : null}
       </div>
       <div className="screen-actions">
         {badge}

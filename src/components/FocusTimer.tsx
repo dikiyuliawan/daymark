@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Task } from "../domain/types";
 import { formatDuration } from "../domain/stats";
+import { formatDurationClock, formatDurationLabel } from "../domain/format";
 import { Dropdown } from "./Dropdown";
 import { PauseIcon, PlayIcon, ResetIcon } from "./icons";
 
@@ -79,6 +80,20 @@ export function FocusTimer({ tasks, onComplete }: FocusTimerProps) {
     setRemaining(minutes * 60);
   };
 
+  /** Picking a task that carries a length brings the session to that length. */
+  const chooseTask = (id: string) => {
+    setTaskId(id);
+    const task = tasks.find((item) => item.id === id);
+    if (task?.durationMin !== null && task?.durationMin !== undefined && PRESETS.includes(task.durationMin)) {
+      setPreset(task.durationMin);
+      setRemaining(task.durationMin * 60);
+    }
+  };
+
+  const task = tasks.find((item) => item.id === taskId) ?? null;
+  const plannedMinutes = task?.durationMin ?? null;
+  const overPlan = plannedMinutes !== null && elapsed > plannedMinutes;
+
   return (
     <section className="focus">
       <div className="focus-task">
@@ -86,7 +101,7 @@ export function FocusTimer({ tasks, onComplete }: FocusTimerProps) {
           variant="link"
           label="Focus task"
           value={taskId}
-          onChange={setTaskId}
+          onChange={chooseTask}
           options={[
             { value: "", label: "No task" },
             ...tasks
@@ -101,6 +116,12 @@ export function FocusTimer({ tasks, onComplete }: FocusTimerProps) {
         <span className="focus-sub">
           {running ? "Focusing" : elapsed > 0 ? "Paused" : "Ready to focus"}
         </span>
+        {plannedMinutes !== null ? (
+          <span className="focus-planned" data-over={overPlan ? "true" : undefined}>
+            planned {formatDurationClock(plannedMinutes)}
+            {overPlan ? ` · ${formatDurationLabel(elapsed - plannedMinutes)} over` : ""}
+          </span>
+        ) : null}
       </div>
 
       <div className="segmented" role="group" aria-label="Session length">

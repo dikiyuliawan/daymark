@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { App } from "../app/App";
 import { localDateKey } from "../domain/localDate";
 
-const STORAGE_KEY = "daymark:data:v2";
+const STORAGE_KEY = "daymark:data:v3";
 
 function stored() {
   return JSON.parse(window.localStorage.getItem(STORAGE_KEY)!);
@@ -57,7 +57,7 @@ describe("app integration", () => {
     expect(await second.findByText("Fix flaky test")).toBeInTheDocument();
 
     const saved = stored();
-    expect(saved.schemaVersion).toBe(2);
+    expect(saved.schemaVersion).toBe(3);
     expect(saved.tasks[0].status).toBe("todo");
     expect(saved.tasks[0].projectId).toBeNull();
     expect(saved.tasks[0].subtasks).toEqual([]);
@@ -206,6 +206,41 @@ describe("app integration", () => {
       expect(task.priority).toBe("high");
       expect(task.dueDate).toBe("2026-11-01");
     });
+  });
+
+  it("sets a length on a task and counts it against the day's budget", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "New task" }));
+    await submitTaskInDialog(user, "Write the spec");
+    await user.click(screen.getByRole("button", { name: /Open task details: Write the spec/ }));
+
+    const dialog = screen.getByRole("dialog");
+    await user.click(within(dialog).getByRole("switch", { name: "Add to Today" }));
+    await user.click(within(dialog).getByRole("button", { name: "30m" }));
+    await user.click(within(dialog).getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() => {
+      expect(stored().tasks[0].durationMin).toBe(30);
+      expect(stored().tasks[0].scheduledDate).toBe(localDateKey());
+    });
+    await user.click(screen.getByRole("link", { name: "Today" }));
+    expect(screen.getByText("30m of 5h")).toBeInTheDocument();
+  });
+
+  it("changes the day's budget from the plan", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: /planned of 5h a day/ }));
+    const dialog = screen.getByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "4h" }));
+
+    await waitFor(() => {
+      expect(stored().settings.workdayMinutes).toBe(240);
+    });
+    expect(screen.getByText("0m of 4h")).toBeInTheDocument();
   });
 
   it("finds tasks through search", async () => {

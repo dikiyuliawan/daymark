@@ -8,6 +8,7 @@ import {
   formatDuration,
   formatMinutes,
   last7Days,
+  plannedMinutesOn,
   plannedToday,
 } from "./stats";
 import { addDays, localDateKey } from "./localDate";
@@ -26,6 +27,7 @@ function makeTask(overrides: Partial<Task> = {}): Task {
     priority: null,
     emoji: null,
     color: null,
+    durationMin: null,
     subtasks: [],
     order: 0,
     createdAt: `${TODAY}T08:00:00.000Z`,
@@ -53,6 +55,17 @@ describe("stats", () => {
   it("counts tasks planned for today", () => {
     const tasks = [makeTask({ scheduledDate: TODAY }), makeTask({ id: "t2", scheduledDate: "2026-10-18" })];
     expect(plannedToday(tasks, TODAY)).toBe(1);
+  });
+
+  it("adds up the planned work of a day and skips unsized tasks", () => {
+    const tasks = [
+      makeTask({ id: "a", scheduledDate: TODAY, durationMin: 90 }),
+      makeTask({ id: "b", scheduledDate: TODAY, durationMin: 45 }),
+      makeTask({ id: "c", scheduledDate: TODAY, durationMin: null }),
+      makeTask({ id: "d", scheduledDate: "2026-10-18", durationMin: 120 }),
+    ];
+    expect(plannedMinutesOn(tasks, TODAY)).toBe(135);
+    expect(plannedMinutesOn(tasks, "2026-10-18")).toBe(120);
   });
 
   it("builds the last 7 days window", () => {

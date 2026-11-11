@@ -1,15 +1,18 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useApp } from "../../app/store";
 import { TaskGroup } from "../../components/TaskGroup";
 import { ProgressBars } from "../../components/ProgressBars";
 import { EmptyState } from "../../components/EmptyState";
 import { ScreenHeader } from "../../components/ScreenHeader";
-import { currentStreak, doneToday, last7Days, plannedToday } from "../../domain/stats";
+import { BudgetSheet } from "../../components/BudgetSheet";
+import { currentStreak, doneToday, last7Days, plannedMinutesOn, plannedToday } from "../../domain/stats";
 import { formatDateLine, formatWeekday } from "../../domain/localDate";
+import { formatDurationLabel } from "../../domain/format";
 import { sortByOrder } from "../../domain/reorder";
 
 export function TodayPage() {
-  const { data, todayKey, openCreate } = useApp();
+  const { data, todayKey, openCreate, setWorkdayMinutes } = useApp();
+  const [budgetOpen, setBudgetOpen] = useState(false);
 
   const scheduled = useMemo(
     () => sortByOrder(data.tasks.filter((task) => task.scheduledDate === todayKey)),
@@ -23,12 +26,35 @@ export function TodayPage() {
   const days = last7Days(data.tasks, todayKey);
   const percent = planned > 0 ? Math.round((doneCount / planned) * 100) : 0;
 
+  const plannedMinutes = plannedMinutesOn(data.tasks, todayKey);
+  const budgetMinutes = data.settings.workdayMinutes;
+  const over = plannedMinutes > budgetMinutes;
+
   return (
     <>
       <ScreenHeader
         day
         title={formatWeekday(todayKey)}
         sub={formatDateLine(todayKey)}
+        subAside={
+          <button
+            type="button"
+            className="capacity"
+            data-over={over ? "true" : undefined}
+            aria-label={
+              over
+                ? `${formatDurationLabel(plannedMinutes)} planned of ${formatDurationLabel(
+                    budgetMinutes,
+                  )} a day: over by ${formatDurationLabel(plannedMinutes - budgetMinutes)}. Change the daily budget`
+                : `${formatDurationLabel(plannedMinutes)} planned of ${formatDurationLabel(
+                    budgetMinutes,
+                  )} a day. Change the daily budget`
+            }
+            onClick={() => setBudgetOpen(true)}
+          >
+            {formatDurationLabel(plannedMinutes)} of {formatDurationLabel(budgetMinutes)}
+          </button>
+        }
         badge={
           <span className="day-badge">
             {doneCount}/{planned}
@@ -74,6 +100,14 @@ export function TodayPage() {
         </p>
         <ProgressBars days={days} todayKey={todayKey} />
       </div>
+
+      {budgetOpen ? (
+        <BudgetSheet
+          minutes={budgetMinutes}
+          onSave={setWorkdayMinutes}
+          onClose={() => setBudgetOpen(false)}
+        />
+      ) : null}
     </>
   );
 }

@@ -184,6 +184,39 @@ ol {
   color: var(--muted);
 }
 
+.screen-sub-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* the day's planned work against its budget */
+.capacity {
+  position: relative;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: var(--t-meta);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.capacity::before {
+  content: "";
+  position: absolute;
+  inset: -16px -6px;
+}
+
+.capacity:hover {
+  color: var(--ink);
+}
+
+.capacity[data-over="true"] {
+  color: var(--warn);
+}
+
 .screen-actions {
   display: flex;
   align-items: center;

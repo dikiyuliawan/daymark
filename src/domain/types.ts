@@ -65,6 +65,8 @@ export type Task = {
   priority: Priority | null;
   emoji: string | null;
   color: string | null;
+  /** The planned length of the work, in minutes. Null when it is not sized. */
+  durationMin: number | null;
   subtasks: Subtask[];
   order: number;
   createdAt: string;
@@ -82,6 +84,8 @@ export type FocusSession = {
 
 export type Settings = {
   theme: ThemeMode;
+  /** How much planned work a day holds, in minutes. */
+  workdayMinutes: number;
 };
 
 export type AppData = {
@@ -92,10 +96,13 @@ export type AppData = {
   settings: Settings;
 };
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
+
+/** Five hours of planned work a day, until the user says otherwise. */
+export const DEFAULT_WORKDAY_MINUTES = 300;
 
 export function createDefaultSettings(): Settings {
-  return { theme: "system" };
+  return { theme: "system", workdayMinutes: DEFAULT_WORKDAY_MINUTES };
 }
 
 export function createEmptyAppData(): AppData {
@@ -113,6 +120,7 @@ export type NewTaskInput = {
   details: string;
   projectId: string | null;
   scheduledDate: string | null;
+  durationMin?: number | null;
 };
 
 export type TaskPatch = Partial<
@@ -127,6 +135,7 @@ export type TaskPatch = Partial<
     | "priority"
     | "emoji"
     | "color"
+    | "durationMin"
     | "subtasks"
     | "order"
     | "completedAt"

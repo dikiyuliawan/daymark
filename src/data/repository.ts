@@ -12,10 +12,10 @@ import {
   ThemeMode,
   createEmptyAppData,
 } from "../domain/types";
-import { migrateV1, validateAppData } from "../domain/validate";
+import { migrateV1, migrateV2, validateAppData } from "../domain/validate";
 import { generateId, nowIso } from "./utils";
 import {
-  LEGACY_STORAGE_KEY,
+  PREVIOUS_STORAGE_KEYS,
   STORAGE_KEY,
   StorageLike,
   readRaw,
@@ -30,6 +30,17 @@ export type LoadOutcome =
 
 export type SaveOutcome = { kind: "saved" } | { kind: "unavailable" };
 
+/** Upgrades a stored document of any known version to the current shape. */
+function upgradeDocument(parsed: unknown): AppData | null {
+  const version =
+    typeof parsed === "object" && parsed !== null
+      ? (parsed as { schemaVersion?: unknown }).schemaVersion
+      : null;
+  if (version === 2) return migrateV2(parsed);
+  if (version === 1) return migrateV1(parsed);
+  return null;
+}
+
 export class DaymarkRepository {
   constructor(private readonly storage: StorageLike | null) {}
 
@@ -42,15 +53,19 @@ export class DaymarkRepository {
       return this.parseCurrent(current.raw);
     }
 
-    const legacy = readRaw(this.storage, LEGACY_STORAGE_KEY);
-    if (legacy.available && legacy.raw !== null) {
+    // An older build wrote to its own key: read it, upgrade it, and write the
+    // upgraded document to the current key so the move happens once.
+    for (const key of PREVIOUS_STORAGE_KEYS) {
+      const legacy = readRaw(this.storage, key);
+      if (!legacy.available) continue;
+      if (legacy.raw === null) continue;
       let parsedLegacy: unknown;
       try {
         parsedLegacy = JSON.parse(legacy.raw);
       } catch {
         return { kind: "corrupt", reason: "Saved data is not valid JSON.", raw: legacy.raw };
       }
-      const migrated = migrateV1(parsedLegacy);
+      const migrated = upgradeDocument(parsedLegacy);
       if (migrated === null) {
         return {
           kind: "corrupt",
@@ -75,7 +90,13 @@ export class DaymarkRepository {
     }
     const outcome = validateAppData(parsed);
     if (outcome.kind === "invalid") {
-      return { kind: "corrupt", reason: outcome.reason, raw };
+      // A document from the previous version is upgraded, not rejected.
+      const upgraded = upgradeDocument(parsed);
+      if (upgraded === null) {
+        return { kind: "corrupt", reason: outcome.reason, raw };
+      }
+      writeRaw(this.storage, STORAGE_KEY, serializeAppData(upgraded));
+      return { kind: "ready", data: upgraded, migrated: true };
     }
     return { kind: "ready", data: outcome.data, migrated: false };
   }
@@ -108,6 +129,7 @@ export function addTaskToData(data: AppData, input: NewTaskInput): AppData {
     priority: null,
     emoji: null,
     color: null,
+    durationMin: input.durationMin ?? null,
     subtasks: [],
     order: nextTopOrder(data.tasks),
     createdAt: timestamp,
@@ -233,6 +255,11 @@ export function addFocusSessionToData(
 
 export function setThemeInData(data: AppData, theme: ThemeMode): AppData {
   const settings: Settings = { ...data.settings, theme };
+  return { ...data, settings };
+}
+
+export function setWorkdayMinutesInData(data: AppData, workdayMinutes: number): AppData {
+  const settings: Settings = { ...data.settings, workdayMinutes };
   return { ...data, settings };
 }
 

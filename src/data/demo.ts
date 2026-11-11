@@ -1,4 +1,4 @@
-import { AppData, SCHEMA_VERSION } from "../domain/types";
+import { AppData, SCHEMA_VERSION, createDefaultSettings } from "../domain/types";
 import { addDays, localDateKey } from "../domain/localDate";
 
 /**
@@ -12,7 +12,7 @@ export function demoData(todayKey: string = localDateKey()): AppData {
 
   return {
     schemaVersion: SCHEMA_VERSION,
-    settings: { theme: "system" },
+    settings: createDefaultSettings(),
     projects: [
       {
         id: projectIds.launch,
@@ -41,6 +41,7 @@ export function demoData(todayKey: string = localDateKey()): AppData {
         scheduledDate: todayKey,
         dueDate: todayKey,
         priority: "medium",
+        durationMin: 90,
         emoji: "📝",
         color: "pine",
         subtasks: [
@@ -61,6 +62,7 @@ export function demoData(todayKey: string = localDateKey()): AppData {
         scheduledDate: todayKey,
         dueDate: todayKey,
         priority: "high",
+        durationMin: 60,
         emoji: "🎥",
         color: "amber",
         subtasks: [],
@@ -78,6 +80,7 @@ export function demoData(todayKey: string = localDateKey()): AppData {
         scheduledDate: todayKey,
         dueDate: addDays(todayKey, 1),
         priority: null,
+        durationMin: 45,
         emoji: null,
         color: null,
         subtasks: [],
@@ -95,6 +98,7 @@ export function demoData(todayKey: string = localDateKey()): AppData {
         scheduledDate: todayKey,
         dueDate: addDays(todayKey, -2),
         priority: "high",
+        durationMin: 30,
         emoji: "🛠️",
         color: "sky",
         subtasks: [],
@@ -112,6 +116,7 @@ export function demoData(todayKey: string = localDateKey()): AppData {
         scheduledDate: todayKey,
         dueDate: null,
         priority: null,
+        durationMin: null,
         emoji: "☕",
         color: "clay",
         subtasks: [],
@@ -129,6 +134,7 @@ export function demoData(todayKey: string = localDateKey()): AppData {
         scheduledDate: null,
         dueDate: addDays(todayKey, 3),
         priority: "low",
+        durationMin: null,
         emoji: null,
         color: null,
         subtasks: [],
@@ -146,6 +152,7 @@ export function demoData(todayKey: string = localDateKey()): AppData {
         scheduledDate: addDays(todayKey, 2),
         dueDate: addDays(todayKey, 2),
         priority: null,
+        durationMin: null,
         emoji: null,
         color: null,
         subtasks: [],

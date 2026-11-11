@@ -147,6 +147,15 @@
   white-space: nowrap;
 }
 
+/* a row of many lengths: the same chips, packed tighter */
+.chip-row--tight {
+  gap: 4px;
+}
+
+.chip-row--tight .chip {
+  padding: 0 9px;
+}
+
 .chip.is-on {
   border-color: transparent;
   background: var(--action-soft);
@@ -645,6 +654,7 @@
 
 .field input[type="text"],
 .field input[type="date"],
+.field input[type="number"],
 .field textarea,
 .search-input {
   width: 100%;
@@ -1094,6 +1104,15 @@
 .focus-sub {
   font-size: var(--t-meta);
   color: var(--muted);
+}
+
+.focus-planned {
+  font-size: var(--t-meta);
+  color: var(--faint);
+}
+
+.focus-planned[data-over="true"] {
+  color: var(--warn);
 }
 
 .focus-task {

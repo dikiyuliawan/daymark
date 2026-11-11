@@ -81,6 +81,14 @@ function normalizePriority(value: unknown): Priority | null {
   return isPriority(value) ? value : null;
 }
 
+/** A planned length: whole minutes, no more than a day. */
+function normalizeDuration(value: unknown): number | null {
+  if (typeof value !== "number" || !Number.isFinite(value)) return null;
+  const minutes = Math.round(value);
+  if (minutes <= 0 || minutes > 24 * 60) return null;
+  return minutes;
+}
+
 function validateTask(raw: unknown): Task | null {
   if (!isPlainObject(raw)) return null;
   if (!isNonEmptyString(raw.id)) return null;
@@ -110,6 +118,7 @@ function validateTask(raw: unknown): Task | null {
     priority: normalizePriority(raw.priority),
     emoji: optionalEmoji(raw.emoji),
     color: optionalColor(raw.color),
+    durationMin: normalizeDuration(raw.durationMin),
     subtasks: validateSubtasks(raw.subtasks),
     order: typeof raw.order === "number" && Number.isFinite(raw.order) ? raw.order : 0,
     createdAt: raw.createdAt,
@@ -137,7 +146,17 @@ function validateSettings(raw: unknown): Settings {
   if (!isPlainObject(raw)) {
     return createDefaultSettings();
   }
-  return { theme: isThemeMode(raw.theme) ? raw.theme : "system" };
+  const minutes =
+    typeof raw.workdayMinutes === "number" && Number.isFinite(raw.workdayMinutes)
+      ? Math.round(raw.workdayMinutes)
+      : null;
+  return {
+    theme: isThemeMode(raw.theme) ? raw.theme : "system",
+    workdayMinutes:
+      minutes !== null && minutes > 0 && minutes <= 24 * 60
+        ? minutes
+        : createDefaultSettings().workdayMinutes,
+  };
 }
 
 function hasDuplicates(values: string[]): boolean {
@@ -239,6 +258,7 @@ export function migrateV1(raw: unknown): AppData | null {
         dueDate: null,
         emoji: null,
         color: null,
+        durationMin: null,
         order: typeof task.order === "number" ? task.order : index,
         completedAt: null,
         ...task,
@@ -246,6 +266,33 @@ export function migrateV1(raw: unknown): AppData | null {
     }),
     focusSessions: [],
     settings: createDefaultSettings(),
+  };
+  const outcome = validateAppData(upgraded);
+  return outcome.kind === "ok" ? outcome.data : null;
+}
+
+/**
+ * Upgrades a version-2 payload: tasks gain a planned length and the settings
+ * gain the day's budget. Both default to empty, so an upgrade never changes
+ * what the user sees beyond the two new fields.
+ */
+export function migrateV2(raw: unknown): AppData | null {
+  if (!isPlainObject(raw) || raw.schemaVersion !== 2) {
+    return null;
+  }
+  if (!Array.isArray(raw.projects) || !Array.isArray(raw.tasks)) {
+    return null;
+  }
+  const upgraded = {
+    ...raw,
+    schemaVersion: SCHEMA_VERSION,
+    tasks: (raw.tasks as unknown[]).map((task) => {
+      if (!isPlainObject(task)) {
+        return task;
+      }
+      return { durationMin: null, ...task };
+    }),
+    settings: { ...createDefaultSettings(), ...(isPlainObject(raw.settings) ? raw.settings : {}) },
   };
   const outcome = validateAppData(upgraded);
   return outcome.kind === "ok" ? outcome.data : null;

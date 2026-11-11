@@ -8,6 +8,9 @@ import { Dropdown } from "./Dropdown";
 import { STATUS_CHOICES } from "./statusChoices";
 import { EmojiColorPicker } from "./EmojiColorPicker";
 import { SubtasksEditor } from "./SubtasksEditor";
+import { formatDurationLabel } from "../domain/format";
+
+const DURATION_PRESETS = [15, 30, 45, 60, 90, 120];
 
 type TaskEditorSheetProps = {
   editor: NonNullable<EditorState>;
@@ -46,6 +49,7 @@ export function TaskEditorSheet({ editor, data, todayKey }: TaskEditorSheetProps
   const [dueDate, setDueDate] = useState(editing?.dueDate ?? "");
   const [emoji, setEmoji] = useState<string | null>(editing?.emoji ?? null);
   const [color, setColor] = useState<string | null>(editing?.color ?? null);
+  const [duration, setDuration] = useState<number | null>(editing?.durationMin ?? null);
   const [inToday, setInToday] = useState(
     editor.mode === "edit" ? editing?.scheduledDate !== null : Boolean(editor.defaults?.addToToday),
   );
@@ -72,6 +76,7 @@ export function TaskEditorSheet({ editor, data, todayKey }: TaskEditorSheetProps
       priority,
       emoji,
       color,
+      durationMin: duration,
     };
     if (editing) {
       updateTask(editing.id, { ...shared, status });
@@ -156,6 +161,31 @@ export function TaskEditorSheet({ editor, data, todayKey }: TaskEditorSheetProps
             onChange={(event) => setDetails(event.target.value)}
             rows={2}
           />
+        </div>
+
+        <div className="field">
+          <span className="field-label">Duration</span>
+          <div className="chip-row chip-row--tight" role="group" aria-label="Duration">
+            <button
+              type="button"
+              className={`chip${duration === null ? " is-on" : ""}`}
+              aria-pressed={duration === null}
+              onClick={() => setDuration(null)}
+            >
+              None
+            </button>
+            {DURATION_PRESETS.map((value) => (
+              <button
+                key={value}
+                type="button"
+                className={`chip${duration === value ? " is-on" : ""}`}
+                aria-pressed={duration === value}
+                onClick={() => setDuration(value)}
+              >
+                {formatDurationLabel(value)}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="field-row">

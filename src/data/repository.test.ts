@@ -12,6 +12,7 @@ import {
   removeTaskFromData,
   setTaskOrderInData,
   setThemeInData,
+  setWorkdayMinutesInData,
   toggleSubtaskInData,
   updateProjectInData,
   updateTaskInData,
@@ -55,11 +56,11 @@ function addTask(data: AppData, title = "First"): AppData {
 }
 
 describe("DaymarkRepository", () => {
-  it("round-trips v2 data through the versioned key", () => {
+  it("round-trips v3 data through the versioned key", () => {
     const { storage, contents } = memoryStorage();
     const repo = new DaymarkRepository(storage);
     expect(repo.save(addTask(createEmptyAppData(), "Ship")).kind).toBe("saved");
-    expect(contents[STORAGE_KEY]).toContain('"schemaVersion":2');
+    expect(contents[STORAGE_KEY]).toContain('"schemaVersion":3');
 
     const loaded = repo.load();
     expect(loaded.kind).toBe("ready");
@@ -69,7 +70,7 @@ describe("DaymarkRepository", () => {
     }
   });
 
-  it("migrates a v1 document into v2 on load", () => {
+  it("migrates a v1 document into the current shape on load", () => {
     const v1 = {
       schemaVersion: 1,
       projects: [{ id: "p1", name: "Auth", createdAt: "x", updatedAt: "x" }],
@@ -94,7 +95,45 @@ describe("DaymarkRepository", () => {
       expect(loaded.data.tasks[0].subtasks).toEqual([]);
       expect(loaded.data.tasks[0].priority).toBeNull();
     }
-    expect(contents[STORAGE_KEY]).toContain('"schemaVersion":2');
+    expect(contents[STORAGE_KEY]).toContain('"schemaVersion":3');
+  });
+
+  it("migrates a v2 document into the current shape on load", () => {
+    const v2 = {
+      schemaVersion: 2,
+      projects: [],
+      tasks: [
+        {
+          id: "t1",
+          title: "Old",
+          details: "",
+          status: "todo",
+          projectId: null,
+          scheduledDate: null,
+          dueDate: null,
+          priority: null,
+          emoji: null,
+          color: null,
+          subtasks: [],
+          order: 0,
+          createdAt: "2026-10-16T08:00:00.000Z",
+          updatedAt: "2026-10-16T08:00:00.000Z",
+          completedAt: null,
+        },
+      ],
+      focusSessions: [],
+      settings: { theme: "dark" },
+    };
+    const { storage, contents } = memoryStorage({ [LEGACY_STORAGE_KEY]: JSON.stringify(v2) });
+    const loaded = new DaymarkRepository(storage).load();
+    expect(loaded.kind).toBe("ready");
+    if (loaded.kind === "ready") {
+      expect(loaded.migrated).toBe(true);
+      expect(loaded.data.tasks[0].durationMin).toBeNull();
+      expect(loaded.data.settings.theme).toBe("dark");
+      expect(loaded.data.settings.workdayMinutes).toBe(300);
+    }
+    expect(contents[STORAGE_KEY]).toContain('"schemaVersion":3');
   });
 
   it("reports corrupt data without overwriting it", () => {
@@ -111,7 +150,7 @@ describe("DaymarkRepository", () => {
     expect(new DaymarkRepository(null).save(createEmptyAppData()).kind).toBe("unavailable");
   });
 
-  it("uses real browser storage with the v2 key", () => {
+  it("uses real browser storage with the versioned key", () => {
     const storage = getBrowserStorage();
     if (!storage) return;
     const repo = new DaymarkRepository(storage);
@@ -212,5 +251,10 @@ describe("projects & settings", () => {
   it("stores the theme setting", () => {
     const data = setThemeInData(createEmptyAppData(), "dark");
     expect(data.settings.theme).toBe("dark");
+  });
+
+  it("stores the day's budget", () => {
+    const data = setWorkdayMinutesInData(createEmptyAppData(), 240);
+    expect(data.settings.workdayMinutes).toBe(240);
   });
 });

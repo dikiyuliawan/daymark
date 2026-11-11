@@ -6,8 +6,12 @@ export interface StorageLike {
   removeItem(key: string): void;
 }
 
-export const STORAGE_KEY = "daymark:data:v2";
-export const LEGACY_STORAGE_KEY = "daymark:data:v1";
+export const STORAGE_KEY = "daymark:data:v3";
+export const LEGACY_STORAGE_KEY = "daymark:data:v2";
+export const OLDEST_STORAGE_KEY = "daymark:data:v1";
+
+/** The keys an older build may have written, newest first. */
+export const PREVIOUS_STORAGE_KEYS = [LEGACY_STORAGE_KEY, OLDEST_STORAGE_KEY] as const;
 
 export function getBrowserStorage(): StorageLike | null {
   try {
