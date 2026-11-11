@@ -54,6 +54,14 @@ export type Project = {
   updatedAt: string;
 };
 
+export type RepeatRule = "daily" | "weekdays" | "weekly";
+
+export const REPEAT_RULES: readonly RepeatRule[] = ["daily", "weekdays", "weekly"];
+
+export function isRepeatRule(value: unknown): value is RepeatRule {
+  return typeof value === "string" && (REPEAT_RULES as readonly string[]).includes(value);
+}
+
 export type Task = {
   id: string;
   title: string;
@@ -67,6 +75,10 @@ export type Task = {
   color: string | null;
   /** The planned length of the work, in minutes. Null when it is not sized. */
   durationMin: number | null;
+  /** Set on a ritual: the rule that lays it down again. */
+  repeat: RepeatRule | null;
+  /** Set on a day laid down by a ritual: the ritual it came from. */
+  templateId: string | null;
   subtasks: Subtask[];
   order: number;
   createdAt: string;
@@ -82,6 +94,14 @@ export type FocusSession = {
   durationSec: number;
 };
 
+export type Highlight = {
+  id: string;
+  /** The day the note belongs to. */
+  dateKey: string;
+  text: string;
+  createdAt: string;
+};
+
 export type Settings = {
   theme: ThemeMode;
   /** How much planned work a day holds, in minutes. */
@@ -93,10 +113,14 @@ export type AppData = {
   projects: Project[];
   tasks: Task[];
   focusSessions: FocusSession[];
+  /** One line a day, written at the shutdown. */
+  highlights: Highlight[];
+  /** The days that were closed with the shutdown ritual. */
+  shutdowns: string[];
   settings: Settings;
 };
 
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 /** Five hours of planned work a day, until the user says otherwise. */
 export const DEFAULT_WORKDAY_MINUTES = 300;
@@ -111,6 +135,8 @@ export function createEmptyAppData(): AppData {
     projects: [],
     tasks: [],
     focusSessions: [],
+    highlights: [],
+    shutdowns: [],
     settings: createDefaultSettings(),
   };
 }
@@ -136,6 +162,8 @@ export type TaskPatch = Partial<
     | "emoji"
     | "color"
     | "durationMin"
+    | "repeat"
+    | "templateId"
     | "subtasks"
     | "order"
     | "completedAt"

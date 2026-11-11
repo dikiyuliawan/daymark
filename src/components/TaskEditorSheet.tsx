@@ -1,6 +1,13 @@
 import { FormEvent, useRef, useState } from "react";
 import { useApp, EditorState } from "../app/store";
-import { AppData, Priority, PRIORITIES, TaskStatus, priorityLabel } from "../domain/types";
+import {
+  AppData,
+  Priority,
+  PRIORITIES,
+  RepeatRule,
+  TaskStatus,
+  priorityLabel,
+} from "../domain/types";
 import { useToast } from "./ToastProvider";
 import { Sheet } from "./Sheet";
 import { ConfirmDialog } from "./ConfirmDialog";
@@ -11,6 +18,12 @@ import { SubtasksEditor } from "./SubtasksEditor";
 import { formatDurationLabel } from "../domain/format";
 
 const DURATION_PRESETS = [15, 30, 45, 60, 90, 120];
+
+const REPEAT_CHOICES: { value: RepeatRule; label: string }[] = [
+  { value: "daily", label: "Every day" },
+  { value: "weekdays", label: "Every weekday" },
+  { value: "weekly", label: "Every week" },
+];
 
 type TaskEditorSheetProps = {
   editor: NonNullable<EditorState>;
@@ -33,6 +46,7 @@ export function TaskEditorSheet({ editor, data, todayKey }: TaskEditorSheetProps
     addSubtask,
     toggleSubtask,
     removeSubtask,
+    setTaskRepeat,
   } = useApp();
   const { showToast } = useToast();
 
@@ -50,6 +64,12 @@ export function TaskEditorSheet({ editor, data, todayKey }: TaskEditorSheetProps
   const [emoji, setEmoji] = useState<string | null>(editing?.emoji ?? null);
   const [color, setColor] = useState<string | null>(editing?.color ?? null);
   const [duration, setDuration] = useState<number | null>(editing?.durationMin ?? null);
+  const ritual = editing
+    ? (editing.repeat !== null
+        ? editing
+        : (data.tasks.find((task) => task.id === editing.templateId) ?? null))
+    : null;
+  const [rule, setRule] = useState<RepeatRule | null>(ritual?.repeat ?? null);
   const [inToday, setInToday] = useState(
     editor.mode === "edit" ? editing?.scheduledDate !== null : Boolean(editor.defaults?.addToToday),
   );
@@ -80,9 +100,15 @@ export function TaskEditorSheet({ editor, data, todayKey }: TaskEditorSheetProps
     };
     if (editing) {
       updateTask(editing.id, { ...shared, status });
+      if ((rule ?? null) !== (ritual?.repeat ?? null)) {
+        setTaskRepeat(editing.id, rule);
+      }
       showToast("Task saved");
     } else {
-      addTask(shared);
+      const created = addTask(shared);
+      if (rule !== null) {
+        setTaskRepeat(created.id, rule);
+      }
       showToast(inToday ? "Task added to Today" : "Task added");
     }
     closeEditor();
@@ -161,6 +187,31 @@ export function TaskEditorSheet({ editor, data, todayKey }: TaskEditorSheetProps
             onChange={(event) => setDetails(event.target.value)}
             rows={2}
           />
+        </div>
+
+        <div className="field">
+          <span className="field-label">Repeat</span>
+          <div className="chip-row chip-row--tight" role="group" aria-label="Repeat">
+            <button
+              type="button"
+              className={`chip${rule === null ? " is-on" : ""}`}
+              aria-pressed={rule === null}
+              onClick={() => setRule(null)}
+            >
+              Never
+            </button>
+            {REPEAT_CHOICES.map((choice) => (
+              <button
+                key={choice.value}
+                type="button"
+                className={`chip${rule === choice.value ? " is-on" : ""}`}
+                aria-pressed={rule === choice.value}
+                onClick={() => setRule(choice.value)}
+              >
+                {choice.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="field">

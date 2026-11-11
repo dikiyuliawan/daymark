@@ -18,12 +18,17 @@ const STATUS_CHIPS: { value: StatusFilter; label: string }[] = [
 ];
 
 export function TasksPage() {
-  const { data, todayKey } = useApp();
+  const { data, tasks, todayKey } = useApp();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [projectFilter, setProjectFilter] = useState<ProjectFilter>("");
 
+  const rituals = useMemo(
+    () => data.tasks.filter((task) => task.repeat !== null),
+    [data.tasks],
+  );
+
   const visible = useMemo(() => {
-    return data.tasks.filter((task) => {
+    return tasks.filter((task) => {
       if (statusFilter !== "all" && task.status !== statusFilter) return false;
       if (projectFilter === "none" && task.projectId !== null) return false;
       if (projectFilter !== "" && projectFilter !== "none" && task.projectId !== projectFilter) {
@@ -31,7 +36,7 @@ export function TasksPage() {
       }
       return true;
     });
-  }, [data.tasks, statusFilter, projectFilter]);
+  }, [tasks, statusFilter, projectFilter]);
 
   const groups = useMemo(() => groupTasks(visible, todayKey), [visible, todayKey]);
   const total = data.tasks.length;
@@ -70,6 +75,10 @@ export function TasksPage() {
           ]}
         />
       </div>
+
+      {rituals.length > 0 ? (
+        <TaskGroup title="Rituals" tasks={rituals} projects={data.projects} />
+      ) : null}
 
       {visible.length === 0 ? (
         total === 0 ? (

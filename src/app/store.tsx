@@ -13,6 +13,7 @@ import {
   FocusSession,
   NewTaskInput,
   Project,
+  RepeatRule,
   Settings,
   Task,
   TaskPatch,
@@ -23,6 +24,8 @@ import { localDateKey } from "../domain/localDate";
 import {
   addFocusSessionToData,
   addProjectToData,
+  carryTasksToDateInData,
+  closeDayInData,
   addSubtaskToData,
   addTaskToData,
   DaymarkRepository,
@@ -31,6 +34,7 @@ import {
   removeSubtaskFromData,
   removeTaskFromData,
   setTaskOrderInData,
+  setTaskRepeatInData,
   setThemeInData,
   setWorkdayMinutesInData,
   toggleSubtaskInData,
@@ -39,6 +43,7 @@ import {
 } from "../data/repository";
 import { getBrowserStorage } from "../data/storage";
 import { demoData, demoRequested } from "../data/demo";
+import { dayTasks, syncRecurringTasks } from "../domain/recurrence";
 
 export type LoadState =
   | { kind: "loading" }
@@ -58,6 +63,8 @@ const SAVE_ERROR_MESSAGE =
 
 type AppApi = {
   data: AppData;
+  /** The tasks a day can show: everything but the rituals themselves. */
+  tasks: Task[];
   todayKey: string;
   load: LoadState;
   saveError: string | null;
@@ -83,6 +90,9 @@ type AppApi = {
   addFocusSession: (session: Omit<FocusSession, "id">) => void;
   setTheme: (theme: ThemeMode) => void;
   setWorkdayMinutes: (minutes: number) => void;
+  setTaskRepeat: (taskId: string, rule: RepeatRule | null) => void;
+  carryTasks: (taskIds: string[], dateKey: string | null) => void;
+  closeDay: (carryTaskIds: string[], highlight: string) => void;
   dismissRecovery: () => void;
   startFresh: () => void;
   dismissSaveError: () => void;
@@ -116,13 +126,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // ?demo=1 fills an empty workspace with a fixed sample, so screenshots
       // and manual checks show real content. It never overwrites real data.
       const empty = outcome.data.tasks.length === 0 && outcome.data.projects.length === 0;
-      if (empty && demoRequested()) {
-        const seeded = demoData(localDateKey());
-        repositoryRef.current!.save(seeded);
-        setData(seeded);
-      } else {
-        setData(outcome.data);
+      const base = empty && demoRequested() ? demoData(localDateKey()) : outcome.data;
+      const synced = syncRecurringTasks(base, localDateKey());
+      if (synced !== base) {
+        repositoryRef.current!.save(synced);
       }
+      setData(synced);
       setLoad({ kind: "ready" });
     } else if (outcome.kind === "corrupt") {
       setData(createEmptyAppData());
@@ -166,9 +175,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [resolvedTheme]);
 
+  const todayKeyRef = useRef(todayKey);
+  todayKeyRef.current = todayKey;
+
   const persist = useCallback((next: AppData) => {
-    setData(next);
-    const outcome = repositoryRef.current!.save(next);
+    const synced = syncRecurringTasks(next, todayKeyRef.current);
+    setData(synced);
+    const outcome = repositoryRef.current!.save(synced);
     setSaveError(outcome.kind === "saved" ? null : SAVE_ERROR_MESSAGE);
   }, []);
 
@@ -291,6 +304,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [persist],
   );
 
+  const setTaskRepeat = useCallback(
+    (taskId: string, rule: RepeatRule | null) => {
+      persist(setTaskRepeatInData(dataRef.current, taskId, rule));
+    },
+    [persist],
+  );
+
+  const carryTasks = useCallback(
+    (taskIds: string[], dateKey: string | null) => {
+      persist(carryTasksToDateInData(dataRef.current, taskIds, dateKey));
+    },
+    [persist],
+  );
+
+  const closeDay = useCallback(
+    (carryTaskIds: string[], highlight: string) => {
+      persist(closeDayInData(dataRef.current, todayKeyRef.current, carryTaskIds, highlight));
+    },
+    [persist],
+  );
+
   const dismissRecovery = useCallback(() => setLoad({ kind: "ready" }), []);
 
   const startFresh = useCallback(() => {
@@ -306,6 +340,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AppApi>(
     () => ({
       data,
+      tasks: dayTasks(data.tasks),
       todayKey,
       load,
       saveError,
@@ -328,6 +363,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addFocusSession,
       setTheme,
       setWorkdayMinutes,
+      setTaskRepeat,
+      carryTasks,
+      closeDay,
       dismissRecovery,
       startFresh,
       dismissSaveError,
@@ -356,6 +394,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addFocusSession,
       setTheme,
       setWorkdayMinutes,
+      setTaskRepeat,
+      carryTasks,
+      closeDay,
       dismissRecovery,
       startFresh,
       dismissSaveError,

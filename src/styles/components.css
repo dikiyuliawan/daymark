@@ -248,6 +248,17 @@
   height: 24px;
 }
 
+/* the add button steps out of the way while the page scrolls down */
+.fab {
+  transition: transform 200ms var(--ease), opacity 200ms var(--ease);
+}
+
+.fab[data-hidden="true"] {
+  transform: translateY(72px);
+  opacity: 0;
+  pointer-events: none;
+}
+
 @media (hover: hover) and (pointer: fine) {
   .fab:hover {
     background: color-mix(in oklab, var(--action) 88%, var(--ink));
@@ -1192,4 +1203,262 @@
   margin: 12px 0 4px;
   font-size: var(--t-meta);
   color: var(--muted);
+}
+
+/* ------------------------------------------------------------------ the rituals */
+
+.flow {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100dvh - 28px - var(--safe-t));
+}
+
+.flow-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.flow-close {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--action-text);
+  font-size: var(--t-meta);
+  font-weight: 500;
+}
+
+.flow-close svg {
+  width: 16px;
+  height: 16px;
+}
+
+.flow-step {
+  font-size: var(--t-meta);
+  color: var(--faint);
+}
+
+.flow-steps {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 18px;
+}
+
+.flow-step-mark {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--fill);
+}
+
+.flow-step-mark.is-done {
+  background: var(--mark);
+}
+
+.flow-body {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 12px;
+}
+
+.flow-title {
+  font-size: var(--t-title);
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.flow-lede {
+  margin-top: 6px;
+  font-size: var(--t-body);
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.flow-figure {
+  margin-top: 18px;
+  font-size: var(--t-row);
+  font-weight: 500;
+}
+
+.flow-empty {
+  margin-top: 20px;
+  font-size: var(--t-body);
+  color: var(--muted);
+}
+
+.flow-note {
+  margin-top: 14px;
+  font-size: var(--t-meta);
+  color: var(--muted);
+}
+
+.flow-action {
+  padding-top: 10px;
+}
+
+.flow-action .btn {
+  width: 100%;
+  height: 48px;
+}
+
+.plan-list {
+  margin-top: 18px;
+}
+
+.plan-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+
+.plan-item-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.plan-item-title {
+  display: block;
+  font-size: var(--t-row);
+  line-height: 1.35;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.plan-item-meta {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--t-meta);
+  color: var(--muted);
+}
+
+.plan-load {
+  margin-top: 20px;
+  padding: 16px;
+  border-radius: var(--r-card);
+  background: var(--fill-2);
+}
+
+.plan-load-figure {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.plan-load-note {
+  margin-top: 4px;
+  font-size: var(--t-meta);
+  color: var(--muted);
+}
+
+.plan-load[data-over="true"] .plan-load-figure {
+  color: var(--warn);
+}
+
+.plan-day {
+  margin-top: 18px;
+}
+
+.plan-defer {
+  margin-top: 18px;
+}
+
+.plan-defer .chip {
+  margin: 0 6px 6px 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ------------------------------------------------------------------ the entry rows */
+
+.action-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 13px 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: none;
+  text-align: left;
+}
+
+.action-row-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--r-pill);
+  background: var(--fill);
+  color: var(--muted);
+}
+
+.action-row-icon svg {
+  width: 17px;
+  height: 17px;
+}
+
+.action-row-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.action-row-label {
+  display: block;
+  font-size: var(--t-row);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.action-row-hint {
+  display: block;
+  margin-top: 1px;
+  font-size: var(--t-meta);
+  color: var(--muted);
+}
+
+.action-row .row-chevron {
+  flex: none;
+}
+
+/* ------------------------------------------------------------------ the day's note */
+
+.day-note {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 10px 0 2px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  font-size: var(--t-row);
+  color: var(--ink-2);
+}
+
+.day-note-label {
+  flex: none;
+  font-size: var(--t-label);
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.row-check-ritual {
+  color: var(--faint);
+}
+
+.row-check-ritual svg {
+  width: 20px;
+  height: 20px;
+}
+
+.meta-ritual {
+  color: var(--action-text);
 }

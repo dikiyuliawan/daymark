@@ -17,6 +17,8 @@ import { ProjectDetailPage } from "../features/projects/ProjectDetailPage";
 import { UnassignedPage } from "../features/projects/UnassignedPage";
 import { FocusPage } from "../features/focus/FocusPage";
 import { SearchPage } from "../features/search/SearchPage";
+import { PlanFlow } from "../features/plan/PlanFlow";
+import { ShutdownFlow } from "../features/shutdown/ShutdownFlow";
 
 function useNewTaskShortcut() {
   const { editor, openCreate } = useApp();
@@ -65,6 +67,10 @@ function Main() {
       return <FocusPage />;
     case "search":
       return <SearchPage />;
+    case "plan":
+      return <PlanFlow />;
+    case "shutdown":
+      return <ShutdownFlow />;
     case "notFound":
       return <NotFoundPage />;
   }
@@ -72,7 +78,9 @@ function Main() {
 
 function Shell() {
   const { editor, data, todayKey, load } = useApp();
+  const route = useRoute();
   useNewTaskShortcut();
+  const inRitual = route.name === "plan" || route.name === "shutdown";
 
   if (load.kind === "loading") {
     return (
@@ -103,7 +111,7 @@ function Shell() {
             <Main />
           </section>
         </main>
-        <TabBar />
+        {inRitual ? null : <TabBar />}
       </div>
       {editor !== null ? (
         <TaskEditorSheet key={editorKey} editor={editor} data={data} todayKey={todayKey} />

@@ -314,6 +314,11 @@ ol {
   color: var(--muted);
 }
 
+/* the streak sits beside the label, so the floating add button never lands on it */
+.list-group-label--inline {
+  justify-content: flex-start;
+}
+
 .list-group-count {
   color: var(--muted);
   font-weight: 400;

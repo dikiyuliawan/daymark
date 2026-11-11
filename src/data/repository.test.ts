@@ -10,7 +10,9 @@ import {
   removeProjectFromData,
   removeSubtaskFromData,
   removeTaskFromData,
+  closeDayInData,
   setTaskOrderInData,
+  setTaskRepeatInData,
   setThemeInData,
   setWorkdayMinutesInData,
   toggleSubtaskInData,
@@ -56,11 +58,11 @@ function addTask(data: AppData, title = "First"): AppData {
 }
 
 describe("DaymarkRepository", () => {
-  it("round-trips v3 data through the versioned key", () => {
+  it("round-trips the current data through the versioned key", () => {
     const { storage, contents } = memoryStorage();
     const repo = new DaymarkRepository(storage);
     expect(repo.save(addTask(createEmptyAppData(), "Ship")).kind).toBe("saved");
-    expect(contents[STORAGE_KEY]).toContain('"schemaVersion":3');
+    expect(contents[STORAGE_KEY]).toContain('"schemaVersion":4');
 
     const loaded = repo.load();
     expect(loaded.kind).toBe("ready");
@@ -95,7 +97,7 @@ describe("DaymarkRepository", () => {
       expect(loaded.data.tasks[0].subtasks).toEqual([]);
       expect(loaded.data.tasks[0].priority).toBeNull();
     }
-    expect(contents[STORAGE_KEY]).toContain('"schemaVersion":3');
+    expect(contents[STORAGE_KEY]).toContain('"schemaVersion":4');
   });
 
   it("migrates a v2 document into the current shape on load", () => {
@@ -133,7 +135,48 @@ describe("DaymarkRepository", () => {
       expect(loaded.data.settings.theme).toBe("dark");
       expect(loaded.data.settings.workdayMinutes).toBe(300);
     }
-    expect(contents[STORAGE_KEY]).toContain('"schemaVersion":3');
+    expect(contents[STORAGE_KEY]).toContain('"schemaVersion":4');
+  });
+
+  it("migrates a v3 document into the current shape on load", () => {
+    const v3 = {
+      schemaVersion: 3,
+      projects: [],
+      tasks: [
+        {
+          id: "t1",
+          title: "Old",
+          details: "",
+          status: "todo",
+          projectId: null,
+          scheduledDate: null,
+          dueDate: null,
+          priority: null,
+          emoji: null,
+          color: null,
+          durationMin: 30,
+          subtasks: [],
+          order: 0,
+          createdAt: "2026-10-16T08:00:00.000Z",
+          updatedAt: "2026-10-16T08:00:00.000Z",
+          completedAt: null,
+        },
+      ],
+      focusSessions: [],
+      highlights: [],
+      shutdowns: [],
+      settings: { theme: "system", workdayMinutes: 240 },
+    };
+    const { storage, contents } = memoryStorage({ [LEGACY_STORAGE_KEY]: JSON.stringify(v3) });
+    const loaded = new DaymarkRepository(storage).load();
+    expect(loaded.kind).toBe("ready");
+    if (loaded.kind === "ready") {
+      expect(loaded.migrated).toBe(true);
+      expect(loaded.data.tasks[0].durationMin).toBe(30);
+      expect(loaded.data.tasks[0].repeat).toBeNull();
+      expect(loaded.data.settings.workdayMinutes).toBe(240);
+    }
+    expect(contents[STORAGE_KEY]).toContain('"schemaVersion":4');
   });
 
   it("reports corrupt data without overwriting it", () => {
@@ -251,6 +294,41 @@ describe("projects & settings", () => {
   it("stores the theme setting", () => {
     const data = setThemeInData(createEmptyAppData(), "dark");
     expect(data.settings.theme).toBe("dark");
+  });
+
+  it("turns a task into a ritual, and back again", () => {
+    // A task waiting in the inbox becomes the ritual itself.
+    let data = addTask(createEmptyAppData(), "Morning routine");
+    const id = data.tasks[0].id;
+    data = setTaskRepeatInData(data, id, "daily");
+    expect(data.tasks.find((task) => task.id === id)?.repeat).toBe("daily");
+
+    // A task already laid on a day keeps that day, and a ritual is laid beside it.
+    let planned = addTask(createEmptyAppData(), "Standup");
+    planned = {
+      ...planned,
+      tasks: planned.tasks.map((task) => ({ ...task, scheduledDate: "2026-10-17" })),
+    };
+    const plannedId = planned.tasks.find((task) => task.title === "Standup")!.id;
+    planned = setTaskRepeatInData(planned, plannedId, "weekly");
+    const template = planned.tasks.find((task) => task.repeat === "weekly");
+    expect(template).toBeDefined();
+    expect(planned.tasks.find((task) => task.id === plannedId)?.templateId).toBe(template?.id);
+
+    planned = setTaskRepeatInData(planned, plannedId, null);
+    expect(planned.tasks.some((task) => task.repeat !== null)).toBe(false);
+    expect(planned.tasks.find((task) => task.id === plannedId)?.templateId).toBeNull();
+  });
+
+  it("closes a day: what is left rolls over and the note is kept", () => {
+    let data = addTask(createEmptyAppData(), "Left over");
+    const id = data.tasks[0].id;
+    data = { ...data, tasks: data.tasks.map((task) => ({ ...task, scheduledDate: "2026-10-17" })) };
+    data = closeDayInData(data, "2026-10-17", [id], "Shipped the importer");
+    expect(data.tasks[0].scheduledDate).toBe("2026-10-18");
+    expect(data.highlights).toHaveLength(1);
+    expect(data.highlights[0].text).toBe("Shipped the importer");
+    expect(data.shutdowns).toContain("2026-10-17");
   });
 
   it("stores the day's budget", () => {

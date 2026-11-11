@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useApp } from "../app/store";
 import { Link, useRoute, Route } from "../app/router";
 import { FolderIcon, ListIcon, SunGlyph, TimerIcon } from "./icons";
@@ -9,9 +10,31 @@ const TABS: { label: string; path: string; route: Route["name"]; icon: React.Rea
   { label: "Focus", path: "/focus", route: "focus", icon: <TimerIcon /> },
 ];
 
+/** The add button steps out of the way while the page scrolls down. */
+function useScrolledDown(): boolean {
+  const [down, setDown] = useState(false);
+  useEffect(() => {
+    let last = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (y > last + 4 && y > 80) {
+        setDown(true);
+      } else if (y < last - 4) {
+        setDown(false);
+      }
+      last = y;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+  return down;
+}
+
 export function TabBar() {
   const route = useRoute();
   const { openCreate } = useApp();
+  const hidden = useScrolledDown();
+
   return (
     <>
       <nav className="tabbar" aria-label="Primary">
@@ -35,7 +58,13 @@ export function TabBar() {
           );
         })}
       </nav>
-      <button type="button" className="fab" onClick={() => openCreate()} aria-label="New task">
+      <button
+        type="button"
+        className="fab"
+        data-hidden={hidden ? "true" : undefined}
+        onClick={() => openCreate()}
+        aria-label="New task"
+      >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden focusable={false}>
           <path d="M12 5v14M5 12h14" />
         </svg>

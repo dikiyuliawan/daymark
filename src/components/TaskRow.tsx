@@ -12,7 +12,8 @@ import { formatDurationClock, formatDurationLabel } from "../domain/format";
 import { Dropdown } from "./Dropdown";
 import { STATUS_CHOICES } from "./statusChoices";
 import { CheckCircle } from "./CheckCircle";
-import { CalendarIcon, FlagIcon, GripIcon } from "./icons";
+import { CalendarIcon, FlagIcon, GripIcon, RepeatIcon } from "./icons";
+import { repeatLabel } from "../domain/recurrence";
 
 type TaskRowProps = {
   task: Task;
@@ -48,6 +49,7 @@ export function TaskRow({
   const subtaskDone = task.subtasks.filter((subtask) => subtask.done).length;
   const done = task.status === "done";
   const rowId = `task-${task.id}`;
+  const isRitual = task.repeat !== null;
 
   const handleDragStart = (event: DragEvent<HTMLButtonElement>) => {
     event.dataTransfer.setData("text/plain", task.id);
@@ -84,15 +86,21 @@ export function TaskRow({
 
   return (
     <li className="row" data-status={task.status} onDragOver={handleDragOver} onDrop={handleDrop}>
-      <button
-        type="button"
-        className="row-check"
-        aria-pressed={done}
-        aria-label={done ? `Mark “${task.title}” not done` : `Mark “${task.title}” done`}
-        onClick={() => onStatusChange(task.id, done ? "todo" : "done")}
-      >
-        <CheckCircle checked={done} inProgress={task.status === "in_progress"} />
-      </button>
+      {isRitual ? (
+        <span className="row-check row-check-ritual" aria-hidden="true">
+          <RepeatIcon size={20} />
+        </span>
+      ) : (
+        <button
+          type="button"
+          className="row-check"
+          aria-pressed={done}
+          aria-label={done ? `Mark “${task.title}” not done` : `Mark “${task.title}” done`}
+          onClick={() => onStatusChange(task.id, done ? "todo" : "done")}
+        >
+          <CheckCircle checked={done} inProgress={task.status === "in_progress"} />
+        </button>
+      )}
 
       <div className="row-body">
         <button
@@ -105,6 +113,7 @@ export function TaskRow({
         </button>
 
         <div className="row-meta">
+          {isRitual ? <span className="meta-ritual">{repeatLabel(task.repeat)}</span> : null}
           {task.dueDate ? (
             <span className={overdue ? "meta-overdue" : undefined}>
               <CalendarIcon size={13} />

@@ -5,6 +5,10 @@ import { ProgressBars } from "../../components/ProgressBars";
 import { EmptyState } from "../../components/EmptyState";
 import { ScreenHeader } from "../../components/ScreenHeader";
 import { BudgetSheet } from "../../components/BudgetSheet";
+import { ActionRow } from "../../components/ActionRow";
+import { navigate } from "../../app/router";
+import { highlightOn, isDayClosed } from "../../data/repository";
+import { CalendarGlyph, MoonGlyph } from "../../components/icons";
 import { currentStreak, doneToday, last7Days, plannedMinutesOn, plannedToday } from "../../domain/stats";
 import { formatDateLine, formatWeekday } from "../../domain/localDate";
 import { formatDurationLabel } from "../../domain/format";
@@ -27,6 +31,8 @@ export function TodayPage() {
   const percent = planned > 0 ? Math.round((doneCount / planned) * 100) : 0;
 
   const plannedMinutes = plannedMinutesOn(data.tasks, todayKey);
+  const closed = isDayClosed(data, todayKey);
+  const note = highlightOn(data, todayKey);
   const budgetMinutes = data.settings.workdayMinutes;
   const over = plannedMinutes > budgetMinutes;
 
@@ -70,6 +76,20 @@ export function TodayPage() {
         <span className="progress-fill" style={{ ["--p" as string]: `${percent}%` }} />
       </div>
 
+      {closed ? (
+        <p className="day-note">
+          <span className="day-note-label">Today</span>
+          {note}
+        </p>
+      ) : null}
+
+      <ActionRow
+        label="Plan the day"
+        hint="Yesterday, today, and the load"
+        icon={<CalendarGlyph />}
+        onClick={() => navigate("/plan")}
+      />
+
       {scheduled.length === 0 ? (
         <EmptyState kicker="Clear" title="Nothing planned for today yet.">
           <button
@@ -92,7 +112,7 @@ export function TodayPage() {
       )}
 
       <div className="bars-wrap">
-        <p className="list-group-label">
+        <p className="list-group-label list-group-label--inline">
           Last 7 days
           <span className="list-group-count">
             {streak > 0 ? `${streak}-day streak` : "No streak yet"}
@@ -100,6 +120,13 @@ export function TodayPage() {
         </p>
         <ProgressBars days={days} todayKey={todayKey} />
       </div>
+
+      <ActionRow
+        label={closed ? "Review the day" : "End the day"}
+        hint="What got done, and one line about it"
+        icon={<MoonGlyph />}
+        onClick={() => navigate("/shutdown")}
+      />
 
       {budgetOpen ? (
         <BudgetSheet

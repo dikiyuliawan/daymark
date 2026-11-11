@@ -1,6 +1,7 @@
 import {
   AppData,
   FocusSession,
+  Highlight,
   Priority,
   Project,
   SCHEMA_VERSION,
@@ -8,6 +9,7 @@ import {
   Subtask,
   Task,
   isPriority,
+  isRepeatRule,
   isTaskStatus,
   isThemeMode,
   createDefaultSettings,
@@ -119,6 +121,11 @@ function validateTask(raw: unknown): Task | null {
     emoji: optionalEmoji(raw.emoji),
     color: optionalColor(raw.color),
     durationMin: normalizeDuration(raw.durationMin),
+    repeat: isRepeatRule(raw.repeat) ? raw.repeat : null,
+    templateId:
+      raw.templateId !== null && raw.templateId !== undefined && isNonEmptyString(raw.templateId)
+        ? raw.templateId
+        : null,
     subtasks: validateSubtasks(raw.subtasks),
     order: typeof raw.order === "number" && Number.isFinite(raw.order) ? raw.order : 0,
     createdAt: raw.createdAt,
@@ -140,6 +147,15 @@ function validateFocusSession(raw: unknown): FocusSession | null {
     endedAt: raw.endedAt,
     durationSec: Math.max(0, Math.round(raw.durationSec)),
   };
+}
+
+function validateHighlight(raw: unknown): Highlight | null {
+  if (!isPlainObject(raw)) return null;
+  if (!isNonEmptyString(raw.id)) return null;
+  if (!isLocalDateKey(raw.dateKey)) return null;
+  if (typeof raw.text !== "string") return null;
+  if (typeof raw.createdAt !== "string") return null;
+  return { id: raw.id, dateKey: raw.dateKey, text: raw.text, createdAt: raw.createdAt };
 }
 
 function validateSettings(raw: unknown): Settings {
@@ -221,6 +237,23 @@ export function validateAppData(raw: unknown): ValidationOutcome {
     );
   }
 
+  const highlights: Highlight[] = [];
+  const rawHighlights = Array.isArray(raw.highlights) ? raw.highlights : [];
+  for (const item of rawHighlights) {
+    const highlight = validateHighlight(item);
+    if (highlight) {
+      highlights.push(highlight);
+    }
+  }
+
+  const shutdowns: string[] = [];
+  const rawShutdowns = Array.isArray(raw.shutdowns) ? raw.shutdowns : [];
+  for (const item of rawShutdowns) {
+    if (isLocalDateKey(item) && !shutdowns.includes(item)) {
+      shutdowns.push(item);
+    }
+  }
+
   return {
     kind: "ok",
     data: {
@@ -228,6 +261,8 @@ export function validateAppData(raw: unknown): ValidationOutcome {
       projects,
       tasks,
       focusSessions,
+      highlights,
+      shutdowns,
       settings: validateSettings(raw.settings),
     },
   };
@@ -266,6 +301,33 @@ export function migrateV1(raw: unknown): AppData | null {
     }),
     focusSessions: [],
     settings: createDefaultSettings(),
+  };
+  const outcome = validateAppData(upgraded);
+  return outcome.kind === "ok" ? outcome.data : null;
+}
+
+/**
+ * Upgrades a version-3 payload: tasks gain the repeat rule and the ritual they
+ * came from, and the workspace gains its daily highlights and closed days.
+ */
+export function migrateV3(raw: unknown): AppData | null {
+  if (!isPlainObject(raw) || raw.schemaVersion !== 3) {
+    return null;
+  }
+  if (!Array.isArray(raw.projects) || !Array.isArray(raw.tasks)) {
+    return null;
+  }
+  const upgraded = {
+    ...raw,
+    schemaVersion: SCHEMA_VERSION,
+    tasks: (raw.tasks as unknown[]).map((task) => {
+      if (!isPlainObject(task)) {
+        return task;
+      }
+      return { repeat: null, templateId: null, ...task };
+    }),
+    highlights: [],
+    shutdowns: [],
   };
   const outcome = validateAppData(upgraded);
   return outcome.kind === "ok" ? outcome.data : null;

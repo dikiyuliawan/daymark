@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { App } from "../app/App";
 import { localDateKey } from "../domain/localDate";
 
-const STORAGE_KEY = "daymark:data:v3";
+const STORAGE_KEY = "daymark:data:v4";
 
 function stored() {
   return JSON.parse(window.localStorage.getItem(STORAGE_KEY)!);
@@ -57,7 +57,7 @@ describe("app integration", () => {
     expect(await second.findByText("Fix flaky test")).toBeInTheDocument();
 
     const saved = stored();
-    expect(saved.schemaVersion).toBe(3);
+    expect(saved.schemaVersion).toBe(4);
     expect(saved.tasks[0].status).toBe("todo");
     expect(saved.tasks[0].projectId).toBeNull();
     expect(saved.tasks[0].subtasks).toEqual([]);
@@ -241,6 +241,109 @@ describe("app integration", () => {
       expect(stored().settings.workdayMinutes).toBe(240);
     });
     expect(screen.getByText("0m of 4h")).toBeInTheDocument();
+  });
+
+  it("turns a task into a ritual and lays it down again the next day", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "New task" }));
+    await submitTaskInDialog(user, "Morning routine");
+    await user.click(screen.getByRole("button", { name: /Open task details: Morning routine/ }));
+
+    const dialog = screen.getByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Every day" }));
+    await user.click(within(dialog).getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() => {
+      const tasks = stored().tasks;
+      const ritual = tasks.find((task: { repeat: string | null }) => task.repeat === "daily");
+      expect(ritual).toBeDefined();
+      const copy = tasks.find(
+        (task: { templateId: string | null; scheduledDate: string | null }) =>
+          task.templateId === ritual.id && task.scheduledDate === localDateKey(),
+      );
+      expect(copy).toBeDefined();
+    });
+
+    // the ritual itself is listed under Rituals, not among the day's work
+    await user.click(screen.getByRole("link", { name: "Tasks" }));
+    expect(await screen.findByText("Rituals")).toBeInTheDocument();
+  });
+
+  it("plans the day by carrying yesterday's leftovers into today", async () => {
+    const user = userEvent.setup();
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayKey = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, "0")}-${String(
+      yesterday.getDate(),
+    ).padStart(2, "0")}`;
+    window.localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        schemaVersion: 4,
+        projects: [],
+        tasks: [
+          {
+            id: "leftover",
+            title: "Left over",
+            details: "",
+            status: "todo",
+            projectId: null,
+            scheduledDate: yesterdayKey,
+            dueDate: null,
+            priority: null,
+            emoji: null,
+            color: null,
+            durationMin: null,
+            repeat: null,
+            templateId: null,
+            subtasks: [],
+            order: 0,
+            createdAt: "2026-10-16T08:00:00.000Z",
+            updatedAt: "2026-10-16T08:00:00.000Z",
+            completedAt: null,
+          },
+        ],
+        focusSessions: [],
+        highlights: [],
+        shutdowns: [],
+        settings: { theme: "system", workdayMinutes: 300 },
+      }),
+    );
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: /Plan the day/ }));
+    expect(await screen.findByText("Yesterday")).toBeInTheDocument();
+    expect(screen.getByText("Left over")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await waitFor(() => {
+      expect(stored().tasks[0].scheduledDate).toBe(localDateKey());
+    });
+  });
+
+  it("closes the day: what is left rolls over and the note is kept", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "New task" }));
+    await submitTaskInDialog(user, "Ship the importer");
+    await user.click(screen.getByRole("link", { name: "Today" }));
+
+    await user.click(screen.getByRole("button", { name: /End the day/ }));
+    expect(await screen.findByText("What you finished")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+
+    await user.type(screen.getByLabelText("The day in one line"), "Shipped the importer");
+    await user.click(screen.getByRole("button", { name: "Close the day" }));
+
+    await waitFor(() => {
+      expect(stored().shutdowns).toContain(localDateKey());
+      expect(stored().highlights[0].text).toBe("Shipped the importer");
+      expect(stored().tasks[0].scheduledDate).not.toBe(localDateKey());
+    });
   });
 
   it("finds tasks through search", async () => {

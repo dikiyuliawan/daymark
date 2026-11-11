@@ -15,6 +15,8 @@ function task(id: string, order: number): Task {
     emoji: null,
     color: null,
     durationMin: null,
+    repeat: null,
+    templateId: null,
     subtasks: [],
     order,
     createdAt: "2026-10-17T08:00:00.000Z",

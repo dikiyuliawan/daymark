@@ -74,6 +74,38 @@ export function SunGlyph({ size = 22, className }: IconProps) {
 }
 
 /** Two sliders: the filter sheet. */
+/** The planning ritual: a day with a mark on it. */
+export function CalendarGlyph({ size = 18, className }: IconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <rect x="3.5" y="5" width="17" height="15" rx="3" />
+      <path d="M3.5 9.5h17M8 3v4M16 3v4" />
+      <path d="M9 14.5h6" />
+    </svg>
+  );
+}
+
+/** The shutdown ritual: the end of the day. */
+export function MoonGlyph({ size = 18, className }: IconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a7 7 0 1 0 10.5 10.5z" />
+    </svg>
+  );
+}
+
+/** A ritual: the same task, again. */
+export function RepeatIcon({ size = 18, className }: IconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <path d="M4 11a8 8 0 0 1 13.7-5.6L20 8" />
+      <path d="M20 4v4h-4" />
+      <path d="M20 13a8 8 0 0 1-13.7 5.6L4 16" />
+      <path d="M4 20v-4h4" />
+    </svg>
+  );
+}
+
 export function SlidersIcon({ size = 18, className }: IconProps) {
   return (
     <svg {...base(size)} className={className}>

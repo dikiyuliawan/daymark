@@ -4,6 +4,7 @@ import {
   NewTaskInput,
   Priority,
   Project,
+  RepeatRule,
   SCHEMA_VERSION,
   Settings,
   Subtask,
@@ -12,7 +13,8 @@ import {
   ThemeMode,
   createEmptyAppData,
 } from "../domain/types";
-import { migrateV1, migrateV2, validateAppData } from "../domain/validate";
+import { migrateV1, migrateV2, migrateV3, validateAppData } from "../domain/validate";
+import { addDays } from "../domain/localDate";
 import { generateId, nowIso } from "./utils";
 import {
   PREVIOUS_STORAGE_KEYS,
@@ -36,6 +38,7 @@ function upgradeDocument(parsed: unknown): AppData | null {
     typeof parsed === "object" && parsed !== null
       ? (parsed as { schemaVersion?: unknown }).schemaVersion
       : null;
+  if (version === 3) return migrateV3(parsed);
   if (version === 2) return migrateV2(parsed);
   if (version === 1) return migrateV1(parsed);
   return null;
@@ -130,6 +133,8 @@ export function addTaskToData(data: AppData, input: NewTaskInput): AppData {
     emoji: null,
     color: null,
     durationMin: input.durationMin ?? null,
+    repeat: null,
+    templateId: null,
     subtasks: [],
     order: nextTopOrder(data.tasks),
     createdAt: timestamp,
@@ -249,6 +254,144 @@ export function addFocusSessionToData(
 ): AppData {
   const record: FocusSession = { id: generateId(), ...session };
   return { ...data, focusSessions: [...data.focusSessions, record] };
+}
+
+/* ---------- rituals ---------- */
+
+/**
+ * Give a task a repeat rule. The task stays as today's copy and a ritual is
+ * laid down beside it, so tomorrow gets a fresh one with its steps reset.
+ * Clearing the rule takes the ritual and its unfinished days away.
+ */
+export function setTaskRepeatInData(
+  data: AppData,
+  taskId: string,
+  rule: RepeatRule | null,
+): AppData {
+  const task = data.tasks.find((item) => item.id === taskId);
+  if (task === undefined) {
+    return data;
+  }
+  if (rule === null) {
+    const templateId = task.templateId ?? (task.repeat !== null ? task.id : null);
+    const tasks = data.tasks
+      .filter((item) => {
+        if (item.id === taskId) return true;
+        if (item.id === templateId) return false;
+        if (templateId !== null && item.templateId === templateId && item.status !== "done") {
+          return false;
+        }
+        return true;
+      })
+      .map((item) => (item.id === taskId ? { ...item, templateId: null } : item));
+    return { ...data, tasks };
+  }
+  if (task.repeat !== null) {
+    return {
+      ...data,
+      tasks: data.tasks.map((item) =>
+        item.id === taskId ? { ...item, repeat: rule, updatedAt: nowIso() } : item,
+      ),
+    };
+  }
+  if (task.templateId !== null) {
+    return {
+      ...data,
+      tasks: data.tasks.map((item) =>
+        item.id === task.templateId
+          ? { ...item, repeat: rule, updatedAt: nowIso() }
+          : item,
+      ),
+    };
+  }
+  const stamp = nowIso();
+  if (task.scheduledDate === null) {
+    // A task waiting in the inbox becomes the ritual itself.
+    return {
+      ...data,
+      tasks: data.tasks.map((item) =>
+        item.id === taskId ? { ...item, repeat: rule, updatedAt: stamp } : item,
+      ),
+    };
+  }
+  // A task already laid on a day stays as that day's copy, and a ritual is
+  // laid beside it so the next day gets a fresh one.
+  const template: Task = {
+    ...task,
+    id: generateId(),
+    repeat: rule,
+    templateId: null,
+    scheduledDate: null,
+    status: "todo",
+    completedAt: null,
+    subtasks: task.subtasks.map((subtask) => ({ ...subtask, done: false })),
+    order: nextTopOrder(data.tasks) - 1,
+    createdAt: stamp,
+    updatedAt: stamp,
+  };
+  return {
+    ...data,
+    tasks: [
+      ...data.tasks.map((item) =>
+        item.id === taskId ? { ...item, templateId: template.id, updatedAt: stamp } : item,
+      ),
+      template,
+    ],
+  };
+}
+
+/* ---------- the day's plan ---------- */
+
+/** Move tasks to a day: the plan's carry-over and deferrals. */
+export function carryTasksToDateInData(
+  data: AppData,
+  taskIds: string[],
+  dateKey: string | null,
+): AppData {
+  if (taskIds.length === 0) return data;
+  const ids = new Set(taskIds);
+  const stamp = nowIso();
+  return {
+    ...data,
+    tasks: data.tasks.map((task) =>
+      ids.has(task.id) ? { ...task, scheduledDate: dateKey, updatedAt: stamp } : task,
+    ),
+  };
+}
+
+/* ---------- the day's close ---------- */
+
+/** Close a day: carry what is left, note the highlight, remember the day. */
+export function closeDayInData(
+  data: AppData,
+  dateKey: string,
+  carryTaskIds: string[],
+  highlight: string,
+): AppData {
+  // What is left rolls into tomorrow, where it becomes the first thing the
+  // planning ritual asks about.
+  const carried = carryTasksToDateInData(data, carryTaskIds, addDays(dateKey, 1));
+  const trimmed = highlight.trim();
+  const withoutOld = carried.highlights.filter((item) => item.dateKey !== dateKey);
+  const highlights =
+    trimmed === ""
+      ? withoutOld
+      : [
+          ...withoutOld,
+          { id: generateId(), dateKey, text: trimmed, createdAt: nowIso() },
+        ];
+  const shutdowns = carried.shutdowns.includes(dateKey)
+    ? carried.shutdowns
+    : [...carried.shutdowns, dateKey];
+  return { ...carried, highlights, shutdowns };
+}
+
+export function highlightOn(data: AppData, dateKey: string): string {
+  return data.highlights.find((item) => item.dateKey === dateKey)?.text ?? "";
+}
+
+export function isDayClosed(data: AppData, dateKey: string): boolean {
+  return data.shutdowns.includes(dateKey);
 }
 
 /* ---------- settings ---------- */

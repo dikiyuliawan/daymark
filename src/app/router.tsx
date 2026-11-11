@@ -8,6 +8,8 @@ export type Route =
   | { name: "unassigned" }
   | { name: "focus" }
   | { name: "search" }
+  | { name: "plan" }
+  | { name: "shutdown" }
   | { name: "notFound" };
 
 export function parseHash(hash: string): Route {
@@ -30,6 +32,12 @@ export function parseHash(hash: string): Route {
   }
   if (normalized === "/search") {
     return { name: "search" };
+  }
+  if (normalized === "/plan") {
+    return { name: "plan" };
+  }
+  if (normalized === "/shutdown") {
+    return { name: "shutdown" };
   }
   const projectMatch = /^\/projects\/([^/]+)$/.exec(normalized);
   if (projectMatch) {
@@ -54,6 +62,10 @@ export function routePath(route: Route): string {
       return "#/focus";
     case "search":
       return "#/search";
+    case "plan":
+      return "#/plan";
+    case "shutdown":
+      return "#/shutdown";
     case "notFound":
       return "#/today";
   }

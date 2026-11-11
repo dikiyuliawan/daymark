@@ -56,6 +56,27 @@ const SCENES = [
     },
   },
   {
+    name: "plan",
+    route: "/plan",
+  },
+  {
+    name: "plan-load",
+    route: "/plan",
+    run: async () => {
+      const cont = [...document.querySelectorAll("button")].find((b) =>
+        b.textContent?.trim() === "Continue",
+      );
+      cont?.click();
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      cont?.click();
+      await new Promise((resolve) => setTimeout(resolve, 350));
+    },
+  },
+  {
+    name: "shutdown",
+    route: "/shutdown",
+  },
+  {
     name: "focus-task",
     route: "/focus",
     run: async () => {

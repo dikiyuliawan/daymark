@@ -28,6 +28,8 @@ function makeTask(overrides: Partial<Task> = {}): Task {
     emoji: null,
     color: null,
     durationMin: null,
+    repeat: null,
+    templateId: null,
     subtasks: [],
     order: 0,
     createdAt: `${TODAY}T08:00:00.000Z`,
