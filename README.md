@@ -2,7 +2,7 @@
 
 A local-first workbench for programmers: capture a task, decide whether it belongs to today, and keep moving. No server, no account, no sync — everything lives in your browser.
 
-The interface follows a modern mobile-app language (floating tab bar, grouped list panels, tinted icon tiles, light/dark themes) adapted to a calm, pine-accented palette.
+The interface is a phone app in the browser: a day header with a progress bar, hairline-separated task rows with circle checks, a bottom tab bar, a floating add button, and sheets that rise from the foot of the screen. It follows the calm, flat language of Sunsama — one green accent, near-black type, gray meta lines, no cards between the rows — in light and dark.
 
 ## Getting started
 
@@ -12,6 +12,8 @@ npm run dev
 ```
 
 No credentials, environment variables, or network access are needed.
+
+Open `http://localhost:5173/?demo=1` for a filled sample workspace (it only seeds an empty browser, so your own data is never overwritten).
 
 ## Commands
 
@@ -24,24 +26,27 @@ No credentials, environment variables, or network access are needed.
 | `npm run test:watch` | Run tests in watch mode |
 | `npm run typecheck` | TypeScript check, no output |
 | `npm run lint` | ESLint |
+| `node scripts/shots.mjs` | Screenshot every screen at a phone size (design loop) |
 
 ## Screens
 
-- **Today** — a completion hero (`done / planned`), a 7-day bar chart, your current streak, and grouped panels for planned and completed work.
-- **Tasks** — every task grouped into Overdue / Today / Upcoming / No date / Completed, with status chips and a project filter.
-- **Projects** — simple labels with tinted tiles; each project has a detail view with inline rename, an emoji/colour editor, and delete. Deleting a project keeps its tasks and unassigns them.
+The bottom bar carries four places, and the round **+** button adds a task from anywhere.
+
+- **Today** — the day as its own header (`Wednesday` / `November 11, 2026`), a done/total badge, a mint progress bar, then the day's tasks in hairline groups: planned work first, completed work below. A seven-day strip and the current streak sit at the foot.
+- **Tasks** — every task grouped into Overdue / Today / Upcoming / No date / Completed, with status chips and a project filter in the header row.
+- **Projects** — simple labels with tinted tiles; each project has a detail view with inline rename, an icon/colour editor, and delete. Deleting a project keeps its tasks and unassigns them.
 - **Focus** — a Pomodoro-style timer with 15/25/50-minute presets; completed sessions are logged against the day.
-- **Search** — reachable from the top bar, matches titles, details, and project names, grouped by project.
+- **Search** — reachable from the header of every screen, matches titles, details, and project names, grouped by project.
 
 ## Features
 
-- **Quick capture** — press `N` or the **Add** tab to save a task with just a title. Details, project, due date, priority, icon, and *Add to Today* are all optional.
+- **Quick capture** — press `N` or the round **+** button to save a task with just a title. Details, project, due date, priority, icon, and *Add to Today* are all optional.
 - **Subtasks** — a checklist inside each task with `done/total` progress on the row.
 - **Priority & due date** — flag a task Low/Medium/High and give it a due date; overdue items are flagged in the list.
-- **Emoji & colour** — give any task or project a tinted icon tile from a fixed palette.
+- **Icon & colour** — give any task or project a tinted tile from a fixed palette.
 - **Drag reorder** — reorder tasks with the row grip (mouse) or `Alt+↑` / `Alt+↓` (keyboard).
 - **Today membership** — add or remove a task from Today from the row or the editor; the date is the current local calendar day.
-- **Light / dark theme** — follows your system by default; the top-bar button cycles system → light → dark and persists the choice.
+- **Light / dark theme** — follows your system by default; the header button cycles system → light → dark and persists the choice.
 - **Undo** — deleting a task shows a toast with Undo; nothing destructive happens as a side effect of changing status.
 
 ## How data is stored
@@ -59,7 +64,9 @@ No analytics, no telemetry, no external requests. Task content never leaves the 
 
 ## Tech
 
-Vite + React + TypeScript, one CSS token layer (system font stack, no webfonts), `localStorage` behind a validating repository, and a small hash router (`#/today`, `#/tasks`, `#/projects/:id`, `#/focus`, `#/search`, `#/unassigned`).
+Vite + React + TypeScript, a small hash router (`#/today`, `#/tasks`, `#/projects/:id`, `#/focus`, `#/search`, `#/unassigned`), and a `localStorage` repository behind a validating layer.
+
+The look is one system, in `src/styles/`: `tokens.css` holds the palette, the type ramp, the spacing scale and the radii; `base.css` the shell and the type; `components.css` the buttons, the rows, the sheets and the tab bar. The hover, press and focus layer comes from the design kit and is loaded as plain files from `public/assets/motion/`. `scripts/shots.mjs` drives the app in a real browser and writes one PNG per screen and state, which is how the redesign was compared against its reference.
 
 ## Tests
 

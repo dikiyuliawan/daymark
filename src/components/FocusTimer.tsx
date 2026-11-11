@@ -80,29 +80,10 @@ export function FocusTimer({ tasks, onComplete }: FocusTimerProps) {
   };
 
   return (
-    <section className="focus panel">
-      <div className="focus-clock" aria-live="polite" aria-atomic="true">
-        <span className="focus-time">{formatDuration(remaining)}</span>
-        <span className="focus-sub">
-          {running ? "Focusing…" : elapsed > 0 ? "Paused" : "Ready to focus"}
-        </span>
-      </div>
-      <div className="chip-row">
-        {PRESETS.map((minutes) => (
-          <button
-            key={minutes}
-            type="button"
-            className={`chip${preset === minutes ? " is-on" : ""}`}
-            aria-pressed={preset === minutes}
-            onClick={() => choosePreset(minutes)}
-          >
-            {minutes} min
-          </button>
-        ))}
-      </div>
+    <section className="focus">
       <div className="focus-task">
         <Dropdown
-          variant="filter"
+          variant="link"
           label="Focus task"
           value={taskId}
           onChange={setTaskId}
@@ -114,21 +95,43 @@ export function FocusTimer({ tasks, onComplete }: FocusTimerProps) {
           ]}
         />
       </div>
+
+      <div className="focus-clock" aria-live="polite" aria-atomic="true">
+        <span className="focus-time">{formatDuration(remaining)}</span>
+        <span className="focus-sub">
+          {running ? "Focusing" : elapsed > 0 ? "Paused" : "Ready to focus"}
+        </span>
+      </div>
+
+      <div className="segmented" role="group" aria-label="Session length">
+        {PRESETS.map((minutes) => (
+          <button
+            key={minutes}
+            type="button"
+            className={`segment${preset === minutes ? " is-on" : ""}`}
+            aria-pressed={preset === minutes}
+            onClick={() => choosePreset(minutes)}
+          >
+            {minutes} min
+          </button>
+        ))}
+      </div>
+
       <div className="focus-actions">
         {running ? (
-          <button type="button" className="btn btn-primary" onClick={pause}>
+          <button type="button" className="btn btn--primary" onClick={pause}>
             <PauseIcon size={18} />
             Pause
           </button>
         ) : (
-          <button type="button" className="btn btn-primary" onClick={start}>
+          <button type="button" className="btn btn--primary" onClick={start}>
             <PlayIcon size={18} />
             Start
           </button>
         )}
         <button
           type="button"
-          className="btn btn-secondary"
+          className="btn btn--secondary"
           onClick={() => finish(elapsed)}
           disabled={elapsed === 0}
         >

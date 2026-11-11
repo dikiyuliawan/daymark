@@ -2,9 +2,8 @@ import { useEffect } from "react";
 import { AppProvider, useApp } from "./store";
 import { ToastProvider } from "../components/ToastProvider";
 import { useRoute, navigate } from "./router";
-import { TaskEditorDialog } from "../components/TaskEditorDialog";
+import { TaskEditorSheet } from "../components/TaskEditorSheet";
 import { EmptyState } from "../components/EmptyState";
-import { TopBar } from "../components/TopBar";
 import { TabBar } from "../components/TabBar";
 import {
   RecoveryBanner,
@@ -40,9 +39,8 @@ function useNewTaskShortcut() {
 function NotFoundPage() {
   return (
     <>
-      <h1 className="page-title">Page not found</h1>
       <EmptyState kicker="404" title="That address doesn’t match anything in Daymark.">
-        <button type="button" className="btn btn-primary" onClick={() => navigate("/today")}>
+        <button type="button" className="btn btn--primary" onClick={() => navigate("/today")}>
           Go to Today
         </button>
       </EmptyState>
@@ -96,16 +94,19 @@ function Shell() {
       <a className="skip-link" href="#main-content">
         Skip to content
       </a>
-      <TopBar />
-      <main id="main-content" className="content">
-        <RecoveryBanner />
-        <SaveErrorBanner />
-        <StorageUnavailableBanner />
-        <Main />
-      </main>
-      <TabBar />
+      <div className="app-frame">
+        <main id="main-content" className="app-content">
+          <section className="screen wrap">
+            <RecoveryBanner />
+            <SaveErrorBanner />
+            <StorageUnavailableBanner />
+            <Main />
+          </section>
+        </main>
+        <TabBar />
+      </div>
       {editor !== null ? (
-        <TaskEditorDialog key={editorKey} editor={editor} data={data} todayKey={todayKey} />
+        <TaskEditorSheet key={editorKey} editor={editor} data={data} todayKey={todayKey} />
       ) : null}
     </div>
   );

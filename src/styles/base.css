@@ -1,0 +1,538 @@
+/*
+  Daymark base - the reset, the shell, the type and the list rows.
+
+  The shell is one centred column (a phone app on a phone, a framed app on a
+  desktop). Every screen is the same: a header, a list, and nothing else.
+*/
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: auto;
+}
+
+body {
+  font-family: var(--font);
+  font-size: var(--t-body);
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--ground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  -webkit-tap-highlight-color: transparent;
+}
+
+svg {
+  display: block;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+h1,
+h2,
+h3,
+p,
+ul,
+ol,
+figure {
+  margin: 0;
+}
+
+ul,
+ol {
+  padding: 0;
+  list-style: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--action);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.small {
+  font-size: var(--t-meta);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.skip-link {
+  position: fixed;
+  left: 12px;
+  top: 12px;
+  z-index: 100;
+  padding: 10px 16px;
+  border-radius: var(--r-pill);
+  background: var(--ink);
+  color: var(--bg);
+  font-weight: 500;
+  transform: translateY(-200%);
+  transition: transform var(--dur) var(--ease);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+/* ------------------------------------------------------------------ shell */
+
+.app {
+  min-height: 100dvh;
+}
+
+.app-frame {
+  position: relative;
+  width: min(100%, var(--app-w));
+  min-height: 100dvh;
+  margin-inline: auto;
+  background: var(--surface);
+  /* the bottom clears the tab bar and the floating add button */
+  padding-bottom: calc(var(--tabbar-h) + var(--safe-b) + 92px);
+}
+
+@media (min-width: 721px) {
+  .app-frame {
+    border-inline: 1px solid var(--line);
+  }
+}
+
+.app-content {
+  padding: calc(var(--safe-t) + 20px) 0 8px;
+}
+
+/* the content column: one gutter on every screen */
+.wrap {
+  --gut: 20px;
+  width: min(100% - 2 * var(--gut), var(--container));
+  margin-inline: auto;
+}
+
+@media (min-width: 721px) {
+  .wrap {
+    --gut: 28px;
+  }
+}
+
+.loading-note {
+  padding: 96px 24px;
+  text-align: center;
+  color: var(--muted);
+}
+
+/* ------------------------------------------------------------------ header */
+
+.screen-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.screen-head-main {
+  min-width: 0;
+}
+
+.screen-title {
+  font-size: var(--t-title);
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.screen-sub {
+  margin-top: 2px;
+  font-size: var(--t-meta);
+  color: var(--muted);
+}
+
+.screen-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+}
+
+.day-head-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.day-title {
+  font-size: var(--t-day);
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.day-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 7px;
+  background: var(--badge);
+  color: #ffffff;
+  font-size: var(--t-badge);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.01em;
+}
+
+.screen-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 10px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--action-text);
+  font-size: var(--t-meta);
+  font-weight: 500;
+}
+
+.screen-back svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ------------------------------------------------------------------ progress */
+
+.progress {
+  height: 6px;
+  margin: 14px calc(var(--gut) * -1) 0;
+  background: var(--fill);
+  overflow: hidden;
+}
+
+.progress-fill {
+  display: block;
+  height: 100%;
+  width: var(--p, 0%);
+  border-radius: 0 3px 3px 0;
+  background: var(--mark);
+  transform-origin: left center;
+}
+
+/* ------------------------------------------------------------------ lists */
+
+.list {
+  margin-top: 4px;
+}
+
+.groups {
+  margin-top: 6px;
+}
+
+.list-group + .list-group {
+  margin-top: 18px;
+}
+
+.list-group-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 0 6px;
+  font-size: var(--t-label);
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.list-group-count {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 13px 0;
+  border: 0;
+  text-align: left;
+  background: none;
+}
+
+.row-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.row-check {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: none;
+}
+
+/* a thumb-sized target around the small controls, without moving anything */
+.row-check::before,
+.row-grip::before,
+.chip-xs::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  bottom: -8px;
+  left: -6px;
+  right: -6px;
+}
+
+.row-check svg {
+  transition: transform var(--dur) var(--ease);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .row-check:hover svg {
+    transform: scale(1.08);
+  }
+}
+
+.row-grip {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: none;
+  color: var(--faint);
+  cursor: grab;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .row-grip:hover {
+    color: var(--muted);
+    background: var(--fill);
+  }
+}
+
+.row-title {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  font-size: var(--t-row);
+  line-height: 1.35;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.row[data-status="done"] .row-title {
+  color: var(--muted);
+}
+
+.row-title-text {
+  display: block;
+}
+
+.row-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin-top: 9px;
+  font-size: var(--t-meta);
+  color: var(--muted);
+}
+
+.row-meta > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.row-meta .meta-dot {
+  color: var(--faint);
+}
+
+.row-meta .meta-overdue {
+  color: var(--danger);
+  font-weight: 500;
+}
+
+.row-meta .meta-emoji {
+  font-size: 13px;
+  line-height: 1;
+}
+
+.row-meta .meta-steps {
+  color: var(--muted);
+}
+
+.row-meta .meta-flag {
+  color: var(--faint);
+}
+
+.row-meta .meta-flag[data-priority="high"] {
+  color: var(--danger);
+}
+
+.row-meta .meta-flag[data-priority="medium"] {
+  color: var(--warn);
+}
+
+.row-meta .meta-project {
+  color: var(--muted);
+}
+
+.row-meta .chip-xs {
+  height: 22px;
+  padding: 0 8px;
+  font-size: 12px;
+}
+
+.row-pill {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 6px;
+  background: var(--fill);
+  color: var(--muted);
+  font-size: var(--t-pill);
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.row.row-link {
+  padding: 0;
+  border-top: 1px solid var(--line);
+}
+
+.row-link-inner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 0;
+}
+
+.row-link-inner .row-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.row-chevron {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--faint);
+}
+
+.row-empty {
+  color: var(--muted);
+  font-size: var(--t-meta);
+}
+
+/* the tile: a tinted square with the task glyph */
+.tile {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--tile, var(--fill));
+  color: var(--tile-ink, #3d3d42);
+  font-size: 15px;
+  line-height: 1;
+}
+
+.tile-plain {
+  background: var(--fill);
+  color: var(--muted);
+}
+
+.tile-lg {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  font-size: 19px;
+}
+
+/* ------------------------------------------------------------------ empty state */
+
+.empty-state {
+  padding: 56px 8px;
+  text-align: center;
+}
+
+.empty-kicker {
+  font-size: var(--t-label);
+  font-weight: 500;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.empty-title {
+  font-size: var(--t-row);
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.empty-actions {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+}

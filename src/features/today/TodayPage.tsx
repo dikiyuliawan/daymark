@@ -1,13 +1,11 @@
 import { useMemo } from "react";
 import { useApp } from "../../app/store";
 import { TaskGroup } from "../../components/TaskGroup";
-import { StatHero } from "../../components/StatHero";
 import { ProgressBars } from "../../components/ProgressBars";
 import { EmptyState } from "../../components/EmptyState";
-import { PageHeading } from "../../components/PageHeading";
-import { Split } from "../../components/Split";
+import { ScreenHeader } from "../../components/ScreenHeader";
 import { currentStreak, doneToday, last7Days, plannedToday } from "../../domain/stats";
-import { formatLocalDate } from "../../domain/localDate";
+import { formatDateLine, formatWeekday } from "../../domain/localDate";
 import { sortByOrder } from "../../domain/reorder";
 
 export function TodayPage() {
@@ -23,55 +21,59 @@ export function TodayPage() {
   const planned = plannedToday(data.tasks, todayKey);
   const streak = currentStreak(data.tasks, todayKey);
   const days = last7Days(data.tasks, todayKey);
+  const percent = planned > 0 ? Math.round((doneCount / planned) * 100) : 0;
 
   return (
     <>
-      <PageHeading
-        kicker={formatLocalDate(todayKey)}
-        title="Today"
-        actions={
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={() => openCreate({ addToToday: true })}
-          >
-            Add task
-          </button>
+      <ScreenHeader
+        day
+        title={formatWeekday(todayKey)}
+        sub={formatDateLine(todayKey)}
+        badge={
+          <span className="day-badge">
+            {doneCount}/{planned}
+          </span>
         }
       />
-      <Split
-        side={
-          <StatHero
-            label="Completed today"
-            value={doneCount}
-            total={planned > 0 ? planned : undefined}
-            pill={streak > 0 ? `🔥 ${streak}-day streak` : "Complete one to start a streak"}
-          >
-            <ProgressBars days={days} todayKey={todayKey} />
-          </StatHero>
-        }
+
+      <div
+        className="progress"
+        role="img"
+        aria-label={`${doneCount} of ${planned} planned tasks done`}
       >
-        {scheduled.length === 0 ? (
-          <EmptyState kicker="Clear" title="Nothing planned for today yet.">
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => openCreate({ addToToday: true })}
-            >
-              Add a task
-            </button>
-          </EmptyState>
-        ) : (
-          <div className="groups">
-            {active.length > 0 ? (
-              <TaskGroup title="Planned" tasks={active} projects={data.projects} />
-            ) : null}
-            {done.length > 0 ? (
-              <TaskGroup title="Done today" tasks={done} projects={data.projects} />
-            ) : null}
-          </div>
-        )}
-      </Split>
+        <span className="progress-fill" style={{ ["--p" as string]: `${percent}%` }} />
+      </div>
+
+      {scheduled.length === 0 ? (
+        <EmptyState kicker="Clear" title="Nothing planned for today yet.">
+          <button
+            type="button"
+            className="btn btn--primary"
+            onClick={() => openCreate({ addToToday: true })}
+          >
+            Add a task
+          </button>
+        </EmptyState>
+      ) : (
+        <div className="groups">
+          {active.length > 0 ? (
+            <TaskGroup title="Planned" tasks={active} projects={data.projects} />
+          ) : null}
+          {done.length > 0 ? (
+            <TaskGroup title="Completed today" tasks={done} projects={data.projects} />
+          ) : null}
+        </div>
+      )}
+
+      <div className="bars-wrap">
+        <p className="list-group-label">
+          Last 7 days
+          <span className="list-group-count">
+            {streak > 0 ? `${streak}-day streak` : "No streak yet"}
+          </span>
+        </p>
+        <ProgressBars days={days} todayKey={todayKey} />
+      </div>
     </>
   );
 }

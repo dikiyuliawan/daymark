@@ -24,6 +24,24 @@ export function isTileColorKey(value: unknown): value is string {
   return typeof value === "string" && BY_KEY.has(value);
 }
 
+/**
+ * The ink a tile's glyph takes: white on a dark colour, near-black on a light
+ * one, so the glyph always clears 4.5:1 on its own tile.
+ */
+export function tileInk(key: string | null | undefined): string {
+  const hex = tileHex(key);
+  if (hex === null) {
+    return "#3d3d42";
+  }
+  const value = hex.replace("#", "");
+  const r = parseInt(value.slice(0, 2), 16) / 255;
+  const g = parseInt(value.slice(2, 4), 16) / 255;
+  const b = parseInt(value.slice(4, 6), 16) / 255;
+  const channel = (c: number) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+  const luminance = 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+  return luminance > 0.45 ? "#101010" : "#ffffff";
+}
+
 export const EMOJI_SUGGESTIONS: readonly string[] = [
   "🌱",
   "🧭",

@@ -46,6 +46,28 @@ export function formatLocalDateShort(key: string): string {
   });
 }
 
+/** The day on its own: "Wednesday". */
+export function formatWeekday(key: string): string {
+  return formatWith(key, { weekday: "long" });
+}
+
+/** The date on its own: "November 11, 2026". */
+export function formatDateLine(key: string): string {
+  return formatWith(key, {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
+/** The date, short: "Nov 11". */
+export function formatDateCompact(key: string): string {
+  return formatWith(key, {
+    month: "short",
+    day: "numeric",
+  });
+}
+
 function formatWith(key: string, options: Intl.DateTimeFormatOptions): string {
   const date = parseLocalDate(key);
   if (date === null) {

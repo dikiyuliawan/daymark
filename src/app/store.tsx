@@ -37,6 +37,7 @@ import {
   updateTaskInData,
 } from "../data/repository";
 import { getBrowserStorage } from "../data/storage";
+import { demoData, demoRequested } from "../data/demo";
 
 export type LoadState =
   | { kind: "loading" }
@@ -110,7 +111,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const outcome = repositoryRef.current!.load();
     if (outcome.kind === "ready") {
-      setData(outcome.data);
+      // ?demo=1 fills an empty workspace with a fixed sample, so screenshots
+      // and manual checks show real content. It never overwrites real data.
+      const empty = outcome.data.tasks.length === 0 && outcome.data.projects.length === 0;
+      if (empty && demoRequested()) {
+        const seeded = demoData(localDateKey());
+        repositoryRef.current!.save(seeded);
+        setData(seeded);
+      } else {
+        setData(outcome.data);
+      }
       setLoad({ kind: "ready" });
     } else if (outcome.kind === "corrupt") {
       setData(createEmptyAppData());

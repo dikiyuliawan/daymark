@@ -2,20 +2,25 @@ import { FormEvent, useRef, useState } from "react";
 import { useApp, EditorState } from "../app/store";
 import { AppData, Priority, PRIORITIES, TaskStatus, priorityLabel } from "../domain/types";
 import { useToast } from "./ToastProvider";
-import { ModalDialog } from "./ModalDialog";
+import { Sheet } from "./Sheet";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { Dropdown } from "./Dropdown";
 import { STATUS_CHOICES } from "./statusChoices";
 import { EmojiColorPicker } from "./EmojiColorPicker";
 import { SubtasksEditor } from "./SubtasksEditor";
 
-type TaskEditorDialogProps = {
+type TaskEditorSheetProps = {
   editor: NonNullable<EditorState>;
   data: AppData;
   todayKey: string;
 };
 
-export function TaskEditorDialog({ editor, data, todayKey }: TaskEditorDialogProps) {
+/**
+ * The task sheet: a title at the top, its details under it, one action row.
+ * On a phone it rises from the foot of the screen, on a wide screen it is a
+ * centred panel.
+ */
+export function TaskEditorSheet({ editor, data, todayKey }: TaskEditorSheetProps) {
   const {
     closeEditor,
     addTask,
@@ -99,12 +104,28 @@ export function TaskEditorDialog({ editor, data, todayKey }: TaskEditorDialogPro
   }
 
   return (
-    <ModalDialog
+    <Sheet
       title={editing ? "Edit task" : "New task"}
-      initialFocusRef={titleRef}
       onClose={closeEditor}
+      initialFocusRef={titleRef}
+      footer={
+        <>
+          {editing ? (
+            <button
+              type="button"
+              className="btn btn--danger-ghost"
+              onClick={() => setConfirmingDelete(true)}
+            >
+              Delete task
+            </button>
+          ) : null}
+          <button type="submit" form="task-form" className="btn btn--primary">
+            {editing ? "Save changes" : "Add task"}
+          </button>
+        </>
+      }
     >
-      <form onSubmit={handleSubmit} noValidate className="sheet-form">
+      <form id="task-form" onSubmit={handleSubmit} noValidate>
         <div className="field">
           <label htmlFor="task-title">Title</label>
           <input
@@ -128,24 +149,12 @@ export function TaskEditorDialog({ editor, data, todayKey }: TaskEditorDialogPro
         </div>
 
         <div className="field">
-          <label htmlFor="task-details">Details (optional)</label>
+          <label htmlFor="task-details">Details</label>
           <textarea
             id="task-details"
             value={details}
             onChange={(event) => setDetails(event.target.value)}
             rows={2}
-          />
-        </div>
-
-        <div className="field">
-          <span className="field-label">Appearance</span>
-          <EmojiColorPicker
-            emoji={emoji}
-            color={color}
-            onChange={(next) => {
-              setEmoji(next.emoji);
-              setColor(next.color);
-            }}
           />
         </div>
 
@@ -180,13 +189,12 @@ export function TaskEditorDialog({ editor, data, todayKey }: TaskEditorDialogPro
 
         <div className="field-row">
           <div className="field">
-            <span className="field-label">Due date</span>
+            <label htmlFor="task-due">Due date</label>
             <input
               id="task-due"
               type="date"
               value={dueDate}
               onChange={(event) => setDueDate(event.target.value)}
-              aria-label="Due date"
             />
           </div>
           <div className="field">
@@ -227,37 +235,34 @@ export function TaskEditorDialog({ editor, data, todayKey }: TaskEditorDialogPro
           </div>
         ) : null}
 
-        <button
-          type="button"
-          className="switch-row"
-          role="switch"
-          aria-checked={inToday}
-          onClick={() => setInToday((current) => !current)}
-        >
-          <span className="switch" aria-hidden="true">
-            <span className="switch-thumb" />
-          </span>
+        <div className="switch-row">
+          <button
+            type="button"
+            className="m-switch"
+            role="switch"
+            aria-checked={inToday}
+            aria-label="Add to Today"
+            onClick={(event) => {
+              // The kit's motion layer flips aria-checked on a switch it owns;
+              // the state lives in React, so the click is claimed here.
+              event.preventDefault();
+              setInToday((current) => !current);
+            }}
+          />
           <span className="switch-text">Add to Today</span>
-        </button>
+        </div>
 
-        <div className="dialog-footer">
-          {editing ? (
-            <button
-              type="button"
-              className="btn btn-danger-ghost"
-              onClick={() => setConfirmingDelete(true)}
-            >
-              Delete task
-            </button>
-          ) : null}
-          <button type="button" className="btn btn-secondary" onClick={closeEditor}>
-            Cancel
-          </button>
-          <button type="submit" className="btn btn-primary">
-            {editing ? "Save changes" : "Add task"}
-          </button>
+        <div className="field">
+          <EmojiColorPicker
+            emoji={emoji}
+            color={color}
+            onChange={(next) => {
+              setEmoji(next.emoji);
+              setColor(next.color);
+            }}
+          />
         </div>
       </form>
-    </ModalDialog>
+    </Sheet>
   );
 }

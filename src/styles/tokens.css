@@ -1,0 +1,156 @@
+/*
+  Daymark tokens - one system for the whole app.
+
+  The palette is sampled from the reference app (Sunsama): a near-black warm ink,
+  a 72 grey for meta lines, a 12% hairline, a 240 fill for pills and tracks, and one
+  green hue in two values - mint for marks (progress, selection) and a deep green for
+  filled actions, so white text keeps 4.5:1 on it.
+
+  The kit's motion layer (public/assets/motion/motion.css) reads --action, --ink,
+  --bg, --card, --line-strong, --r-btn and --ease, so those names are kept here.
+*/
+
+:root {
+  /* surfaces */
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --ground: #f6f8fa;
+  --card: #ffffff;
+  --fill: #f0f0f0;
+  --fill-2: #f6f8fa;
+
+  /* ink */
+  --ink: #101010;
+  --ink-2: #3d3d42;
+  --muted: #6b6b6b;
+  --faint: #b2b2b2;
+
+  /* lines */
+  --line: rgb(16 16 16 / 0.08);
+  --line-strong: rgb(16 16 16 / 0.14);
+
+  /* one accent, two values: a mark and an action */
+  --action: #0e7a45;
+  --action-text: #0e7a45;
+  --action-ink: #ffffff;
+  --action-soft: #e8f5ee;
+  --mark: #4fcd7e;
+  --done: #a6e6be;
+
+  /* the day's badge: a grey chip with white text, dark enough to pass 4.5:1 */
+  --badge: #6b6b6b;
+
+  /* states */
+  --danger: #b3261e;
+  --danger-soft: #fdeceb;
+  --warn: #8a6d00;
+  --warn-soft: #fdf6e3;
+
+  /* spacing */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+
+  /* type */
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --font-num: var(--font);
+
+  --t-day: 30px;
+  --t-title: 26px;
+  --t-row: 17px;
+  --t-body: 16px;
+  --t-meta: 13px;
+  --t-label: 13px;
+  --t-pill: 12px;
+  --t-badge: 12px;
+  --t-stat: 34px;
+
+  /* radius: one family */
+  --r-pill: 999px;
+  --r-sheet: 20px;
+  --r-card: 16px;
+  --r-ctl: 10px;
+  --r-btn: 10px;
+
+  /* motion: the kit's tokens (motion.css sets its own, these are the fallback) */
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur: 150ms;
+
+  /* the shell */
+  --app-w: 600px;
+  --container: 100%;
+  --tabbar-h: 58px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
+
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: #121213;
+  --surface: #161719;
+  --ground: #0b0b0c;
+  --card: #1d1e21;
+  --fill: #26272b;
+  --fill-2: #1f2023;
+
+  --ink: #f4f4f5;
+  --ink-2: #d6d6da;
+  --muted: #9c9ca3;
+  --faint: #6b6b72;
+
+  --line: rgb(255 255 255 / 0.09);
+  --line-strong: rgb(255 255 255 / 0.16);
+
+  --action: #0e7a45;
+  --action-text: #45d38f;
+  --action-ink: #ffffff;
+  --action-soft: #16301f;
+  --mark: #4fcd7e;
+  --done: #2f6b49;
+
+  --danger: #ff6b60;
+  --danger-soft: #2a1a19;
+  --warn: #e0b64a;
+  --warn-soft: #2a2415;
+
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --bg: #121213;
+    --surface: #161719;
+    --ground: #0b0b0c;
+    --card: #1d1e21;
+    --fill: #26272b;
+    --fill-2: #1f2023;
+
+    --ink: #f4f4f5;
+    --ink-2: #d6d6da;
+    --muted: #a1a1a8;
+    --faint: #6b6b72;
+
+    --line: rgb(255 255 255 / 0.09);
+    --line-strong: rgb(255 255 255 / 0.16);
+
+    --action: #0e7a45;
+    --action-text: #45d38f;
+    --action-ink: #ffffff;
+    --action-soft: #16301f;
+    --mark: #4fcd7e;
+    --done: #2f6b49;
+
+    --danger: #ff6b60;
+    --danger-soft: #2a1a19;
+    --warn: #e0b64a;
+    --warn-soft: #2a2415;
+
+    color-scheme: dark;
+  }
+}

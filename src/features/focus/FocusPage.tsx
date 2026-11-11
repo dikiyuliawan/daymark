@@ -1,10 +1,8 @@
 import { useApp } from "../../app/store";
 import { FocusTimer } from "../../components/FocusTimer";
-import { GroupPanel } from "../../components/GroupPanel";
-import { PageHeading } from "../../components/PageHeading";
-import { Split } from "../../components/Split";
+import { ScreenHeader } from "../../components/ScreenHeader";
 import { formatDuration, focusSecondsOnDate, formatMinutes } from "../../domain/stats";
-import { formatLocalDate, localDateKey } from "../../domain/localDate";
+import { formatDateLine, localDateKey } from "../../domain/localDate";
 
 export function FocusPage() {
   const { data, todayKey, addFocusSession } = useApp();
@@ -17,42 +15,30 @@ export function FocusPage() {
 
   return (
     <>
-      <PageHeading
-        kicker={formatLocalDate(todayKey)}
-        title="Focus"
-        description="Run a focused session and keep the log."
-      />
-      <Split
-        sideAfter
-        side={
-          <GroupPanel
-            title="Today’s sessions"
-            trailing={<span className="group-count">{formatMinutes(totalSeconds)}</span>}
-          >
-            {sessionsToday.length === 0 ? (
-              <li className="row row-empty">
-                <span className="muted small">No sessions yet today.</span>
+      <ScreenHeader title="Focus" sub={formatDateLine(todayKey)} />
+
+      <FocusTimer tasks={data.tasks} onComplete={addFocusSession} />
+
+      <section className="list-group focus-sessions">
+        <p className="list-group-label">
+          Today’s sessions
+          <span className="list-group-count">{formatMinutes(totalSeconds)}</span>
+        </p>
+        {sessionsToday.length === 0 ? (
+          <p className="row-empty">No sessions yet today.</p>
+        ) : (
+          <ul className="list">
+            {sessionsToday.map((session) => (
+              <li key={session.id} className="row">
+                <span className="row-body">
+                  <span className="row-title">{titleFor(session.taskId)}</span>
+                </span>
+                <span className="row-pill">{formatDuration(session.durationSec)}</span>
               </li>
-            ) : (
-              sessionsToday.map((session) => (
-                <li key={session.id} className="row">
-                  <span className="tile" aria-hidden="true">
-                    🎯
-                  </span>
-                  <div className="row-body">
-                    <span className="row-title">{titleFor(session.taskId)}</span>
-                    <div className="row-meta">
-                      <span className="tag">{formatDuration(session.durationSec)}</span>
-                    </div>
-                  </div>
-                </li>
-              ))
-            )}
-          </GroupPanel>
-        }
-      >
-        <FocusTimer tasks={data.tasks} onComplete={addFocusSession} />
-      </Split>
+            ))}
+          </ul>
+        )}
+      </section>
     </>
   );
 }

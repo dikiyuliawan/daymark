@@ -1,0 +1,27 @@
+[
+  {
+    "check": "links",
+    "target": "a.tab:nth-of-type(1)",
+    "reason": "the app routes on the hash (#/today); the tab link is handled by the app's own router, not by a page anchor"
+  },
+  {
+    "check": "links",
+    "target": "a.tab:nth-of-type(2)",
+    "reason": "the app routes on the hash (#/tasks); the tab link is handled by the app's own router, not by a page anchor"
+  },
+  {
+    "check": "links",
+    "target": "a.tab:nth-of-type(3)",
+    "reason": "the app routes on the hash (#/projects); the tab link is handled by the app's own router, not by a page anchor"
+  },
+  {
+    "check": "links",
+    "target": "a.tab:nth-of-type(4)",
+    "reason": "the app routes on the hash (#/focus); the tab link is handled by the app's own router, not by a page anchor"
+  },
+  {
+    "check": "moment-none",
+    "target": "(the page)",
+    "reason": "a task app has no scroll-driven page section to hold a kit moment; its one entrance is the day header and the progress fill on load"
+  }
+]

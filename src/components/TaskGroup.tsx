@@ -2,7 +2,6 @@ import { ReactNode } from "react";
 import { useApp } from "../app/store";
 import { Project, Task, TaskStatus } from "../domain/types";
 import { dropOrder, moveWithin } from "../domain/reorder";
-import { GroupPanel } from "./GroupPanel";
 import { TaskRow } from "./TaskRow";
 
 type TaskGroupProps = {
@@ -14,6 +13,10 @@ type TaskGroupProps = {
   reorderable?: boolean;
 };
 
+/**
+ * One group of tasks: a small label, then the rows on hairline-separated lines.
+ * No panel, no card: the reference app separates its rows with space and a rule.
+ */
 export function TaskGroup({
   title,
   tasks,
@@ -42,24 +45,27 @@ export function TaskGroup({
   };
 
   return (
-    <GroupPanel
-      title={title}
-      trailing={<span className="group-count">{tasks.length}</span>}
-    >
-      {tasks.map((task) => (
-        <TaskRow
-          key={task.id}
-          task={task}
-          projects={projects}
-          showProject={showProject}
-          showTodayToggle={showTodayToggle}
-          onOpen={openEdit}
-          onStatusChange={onStatusChange}
-          onToggleToday={onToggleToday}
-          onMove={reorderable ? onMove : undefined}
-          onDrop={reorderable ? onDrop : undefined}
-        />
-      ))}
-    </GroupPanel>
+    <section className="list-group" aria-label={typeof title === "string" ? title : undefined}>
+      <p className="list-group-label">
+        {title}
+        <span className="list-group-count">{tasks.length}</span>
+      </p>
+      <ul className="list">
+        {tasks.map((task) => (
+          <TaskRow
+            key={task.id}
+            task={task}
+            projects={projects}
+            showProject={showProject}
+            showTodayToggle={showTodayToggle}
+            onOpen={openEdit}
+            onStatusChange={onStatusChange}
+            onToggleToday={onToggleToday}
+            onMove={reorderable ? onMove : undefined}
+            onDrop={reorderable ? onDrop : undefined}
+          />
+        ))}
+      </ul>
+    </section>
   );
 }

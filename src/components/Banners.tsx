@@ -16,7 +16,7 @@ export function RecoveryBanner() {
         <button type="button" className="btn" onClick={dismissRecovery}>
           Continue with an empty workspace
         </button>
-        <button type="button" className="btn btn-danger" onClick={startFresh}>
+        <button type="button" className="btn btn--danger" onClick={startFresh}>
           Clear saved data and start fresh
         </button>
       </div>

@@ -32,7 +32,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             {toast.action ? (
               <button
                 type="button"
-                className="btn btn-small"
+                className="btn btn--secondary btn-sm"
                 onClick={() => {
                   toast.action?.onAction();
                   setToasts((current) => current.filter((t) => t.id !== toast.id));

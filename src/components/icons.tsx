@@ -63,6 +63,27 @@ export function HomeIcon({ size = 20, className }: IconProps) {
   );
 }
 
+/** The day: a sun with short rays, the Today tab. */
+export function SunGlyph({ size = 22, className }: IconProps) {
+  return (
+    <svg {...base(size)} className={className} strokeWidth={1.7}>
+      <circle cx="12" cy="12" r="4.1" />
+      <path d="M12 3.2v2.1M12 18.7v2.1M3.2 12h2.1M18.7 12h2.1M5.8 5.8l1.5 1.5M16.7 16.7l1.5 1.5M18.2 5.8l-1.5 1.5M7.3 16.7l-1.5 1.5" />
+    </svg>
+  );
+}
+
+/** Two sliders: the filter sheet. */
+export function SlidersIcon({ size = 18, className }: IconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <path d="M4 7h9M17 7h3M4 17h3M11 17h9" />
+      <circle cx="15" cy="7" r="2" />
+      <circle cx="9" cy="17" r="2" />
+    </svg>
+  );
+}
+
 export function ListIcon({ size = 20, className }: IconProps) {
   return (
     <svg {...base(size)} className={className}>

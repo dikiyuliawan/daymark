@@ -19,9 +19,13 @@ type DropdownProps = {
   value: string;
   options: DropdownOption[];
   onChange: (value: string) => void;
-  variant?: "chip" | "field" | "filter";
+  variant?: "chip" | "field" | "filter" | "meta" | "pill" | "dot" | "link";
   className?: string;
   onOpenChange?: (open: boolean) => void;
+  /** The text the trigger shows before a choice is made. */
+  placeholder?: string;
+  /** An element that describes the current value, for a dot-only trigger. */
+  describedBy?: string;
 };
 
 function selectedIndex(options: DropdownOption[], value: string): number {
@@ -37,6 +41,8 @@ export function Dropdown({
   variant = "field",
   className,
   onOpenChange,
+  placeholder,
+  describedBy,
 }: DropdownProps) {
   const [open, setOpen] = useState(false);
   const baseId = useId();
@@ -144,13 +150,16 @@ export function Dropdown({
         aria-expanded={open}
         aria-controls={open ? listboxId : undefined}
         aria-activedescendant={open ? optionId(activeIndex) : undefined}
+        aria-describedby={describedBy}
         onClick={() => setOpen((current) => !current)}
         onKeyDown={onTriggerKeyDown}
       >
         {selected?.swatch ? (
           <span className={`status-dot ${selected.swatch}`} aria-hidden="true" />
         ) : null}
-        <span className="dropdown-value">{selected?.label ?? ""}</span>
+        <span className={variant === "dot" ? "visually-hidden" : "dropdown-value"}>
+          {value === "" && placeholder !== undefined ? placeholder : (selected?.label ?? "")}
+        </span>
         <ChevronDown className="dropdown-chevron" size={14} />
       </button>
       {open ? (

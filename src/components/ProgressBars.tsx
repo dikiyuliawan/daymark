@@ -5,7 +5,7 @@ export function ProgressBars({ days, todayKey }: { days: DayCount[]; todayKey: s
   const max = Math.max(1, ...days.map((day) => day.count));
   const total = days.reduce((sum, day) => sum + day.count, 0);
   return (
-    <div className="bars-wrap">
+    <>
       <div
         className="bars"
         role="img"
@@ -22,9 +22,11 @@ export function ProgressBars({ days, todayKey }: { days: DayCount[]; todayKey: s
       </div>
       <div className="bars-axis" aria-hidden="true">
         {days.map((day) => (
-          <span key={day.key}>{formatLocalDateShort(day.key).split(" ")[0]}</span>
+          <span key={day.key} className={day.key === todayKey ? "is-today" : undefined}>
+            {formatLocalDateShort(day.key).split(" ")[0]}
+          </span>
         ))}
       </div>
-    </div>
+    </>
   );
 }

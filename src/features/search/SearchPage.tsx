@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
 import { useApp } from "../../app/store";
+import { navigate } from "../../app/router";
 import { TaskGroup } from "../../components/TaskGroup";
 import { EmptyState } from "../../components/EmptyState";
-import { PageHeading } from "../../components/PageHeading";
-import { Split } from "../../components/Split";
+import { ScreenHeader } from "../../components/ScreenHeader";
 import { sortByOrder } from "../../domain/reorder";
 import { Project, Task } from "../../domain/types";
 
@@ -47,48 +47,59 @@ export function SearchPage() {
 
   return (
     <>
-      <PageHeading kicker="Search" title="Find anything" description="Titles, details, and projects." />
-      <Split
-        sideAfter
-        side={
-          <div className="side-card panel">
-            <span className="field-label">Results</span>
-            <p className="muted small">
-              {active
-                ? `${matchCount} match${matchCount === 1 ? "" : "es"} grouped by project.`
-                : "Search matches titles, details, and project names."}
-            </p>
-          </div>
-        }
-      >
-        <div className="search-bar panel">
-          <input
-            type="text"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search tasks…"
-            aria-label="Search tasks"
-            autoFocus
-          />
+      <ScreenHeader
+        title="Search"
+        back={{ label: "Today", onClick: () => navigate("/today") }}
+        showActions={false}
+      />
+
+      <div className="search-bar">
+        <input
+          type="text"
+          className="search-input"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Search tasks"
+          aria-label="Search tasks"
+          autoFocus
+        />
+        {query !== "" ? (
+          <button
+            type="button"
+            className="search-clear"
+            aria-label="Clear search"
+            onClick={() => setQuery("")}
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" aria-hidden focusable={false}>
+              <path d="M6 6l12 12M18 6 6 18" />
+            </svg>
+          </button>
+        ) : null}
+      </div>
+
+      <p className="search-summary">
+        {active
+          ? `${matchCount} match${matchCount === 1 ? "" : "es"}`
+          : "Matches titles, details, and project names."}
+      </p>
+
+      {!active ? (
+        <EmptyState kicker="Type to search" title="Start typing to find a task." />
+      ) : groups.length === 0 ? (
+        <EmptyState kicker="No matches" title={`Nothing matches “${query.trim()}”.`} />
+      ) : (
+        <div className="groups">
+          {groups.map((group) => (
+            <TaskGroup
+              key={group.key}
+              title={group.label}
+              tasks={group.tasks}
+              projects={data.projects}
+              reorderable={false}
+            />
+          ))}
         </div>
-        {!active ? (
-          <EmptyState kicker="Type to search" title="Start typing to find a task." />
-        ) : groups.length === 0 ? (
-          <EmptyState kicker="No matches" title={`Nothing matches “${query.trim()}”.`} />
-        ) : (
-          <div className="groups">
-            {groups.map((group) => (
-              <TaskGroup
-                key={group.key}
-                title={group.label}
-                tasks={group.tasks}
-                projects={data.projects}
-                reorderable={false}
-              />
-            ))}
-          </div>
-        )}
-      </Split>
+      )}
     </>
   );
 }

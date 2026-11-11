@@ -1,13 +1,32 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-type="software" data-site-kind="software" data-radius="soft" data-buttons="solid" data-motion>
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="color-scheme" content="light" />
-    <title>Daymark</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="page-type" content="software" />
+    <meta name="site-kind" content="software" />
+    <title>Daymark: a daily task planner for programmers</title>
+    <meta
+      name="description"
+      content="Daymark is a local-first daily planner: capture a task, decide whether it belongs to today, and keep moving. No account, no sync, no server."
+    />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#121213" media="(prefers-color-scheme: dark)" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Daymark: a daily task planner for programmers" />
+    <meta
+      property="og:description"
+      content="Capture a task, decide whether it belongs to today, and keep moving. Everything stays in your browser."
+    />
+    <meta property="og:image" content="/share.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/assets/motion/motion.css" />
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/assets/motion/motion.js"></script>
   </body>
 </html>

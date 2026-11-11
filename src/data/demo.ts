@@ -1,0 +1,174 @@
+import { AppData, SCHEMA_VERSION } from "../domain/types";
+import { addDays, localDateKey } from "../domain/localDate";
+
+/**
+ * A deterministic workspace for screenshots and manual checks: `?demo=1` in the
+ * URL fills an empty store with this data once. It never runs without the
+ * query flag, so the real app is untouched.
+ */
+export function demoData(todayKey: string = localDateKey()): AppData {
+  const stamp = new Date().toISOString();
+  const projectIds = { launch: "demo-project-launch", site: "demo-project-site" };
+
+  return {
+    schemaVersion: SCHEMA_VERSION,
+    settings: { theme: "system" },
+    projects: [
+      {
+        id: projectIds.launch,
+        name: "Launch",
+        emoji: "🚀",
+        color: "pine",
+        createdAt: stamp,
+        updatedAt: stamp,
+      },
+      {
+        id: projectIds.site,
+        name: "Website",
+        emoji: "🌐",
+        color: "sky",
+        createdAt: stamp,
+        updatedAt: stamp,
+      },
+    ],
+    tasks: [
+      {
+        id: "demo-task-1",
+        title: "Document customer feedback",
+        details: "Pull the notes from last week's calls into one page.",
+        status: "todo",
+        projectId: projectIds.launch,
+        scheduledDate: todayKey,
+        dueDate: todayKey,
+        priority: "medium",
+        emoji: "📝",
+        color: "pine",
+        subtasks: [
+          { id: "demo-sub-1", title: "Read the call notes", done: true },
+          { id: "demo-sub-2", title: "Group the themes", done: false },
+        ],
+        order: 0,
+        createdAt: stamp,
+        updatedAt: stamp,
+        completedAt: null,
+      },
+      {
+        id: "demo-task-2",
+        title: "Product demo with Jenn",
+        details: "",
+        status: "in_progress",
+        projectId: projectIds.launch,
+        scheduledDate: todayKey,
+        dueDate: todayKey,
+        priority: "high",
+        emoji: "🎥",
+        color: "amber",
+        subtasks: [],
+        order: 1,
+        createdAt: stamp,
+        updatedAt: stamp,
+        completedAt: null,
+      },
+      {
+        id: "demo-task-3",
+        title: "Review the pricing page copy",
+        details: "",
+        status: "todo",
+        projectId: projectIds.site,
+        scheduledDate: todayKey,
+        dueDate: addDays(todayKey, 1),
+        priority: null,
+        emoji: null,
+        color: null,
+        subtasks: [],
+        order: 2,
+        createdAt: stamp,
+        updatedAt: stamp,
+        completedAt: null,
+      },
+      {
+        id: "demo-task-4",
+        title: "Fix the drag and drop loading",
+        details: "",
+        status: "todo",
+        projectId: projectIds.site,
+        scheduledDate: todayKey,
+        dueDate: addDays(todayKey, -2),
+        priority: "high",
+        emoji: "🛠️",
+        color: "sky",
+        subtasks: [],
+        order: 3,
+        createdAt: stamp,
+        updatedAt: stamp,
+        completedAt: null,
+      },
+      {
+        id: "demo-task-5",
+        title: "Morning routine",
+        details: "",
+        status: "done",
+        projectId: null,
+        scheduledDate: todayKey,
+        dueDate: null,
+        priority: null,
+        emoji: "☕",
+        color: "clay",
+        subtasks: [],
+        order: 4,
+        createdAt: stamp,
+        updatedAt: stamp,
+        completedAt: stamp,
+      },
+      {
+        id: "demo-task-6",
+        title: "Reply to the support thread",
+        details: "",
+        status: "todo",
+        projectId: null,
+        scheduledDate: null,
+        dueDate: addDays(todayKey, 3),
+        priority: "low",
+        emoji: null,
+        color: null,
+        subtasks: [],
+        order: 5,
+        createdAt: stamp,
+        updatedAt: stamp,
+        completedAt: null,
+      },
+      {
+        id: "demo-task-7",
+        title: "Ship the changelog",
+        details: "",
+        status: "todo",
+        projectId: projectIds.launch,
+        scheduledDate: addDays(todayKey, 2),
+        dueDate: addDays(todayKey, 2),
+        priority: null,
+        emoji: null,
+        color: null,
+        subtasks: [],
+        order: 6,
+        createdAt: stamp,
+        updatedAt: stamp,
+        completedAt: null,
+      },
+    ],
+    focusSessions: [
+      {
+        id: "demo-session-1",
+        taskId: "demo-task-2",
+        startedAt: stamp,
+        endedAt: stamp,
+        durationSec: 25 * 60,
+      },
+    ],
+  };
+}
+
+/** True when the URL asks for the demo workspace. */
+export function demoRequested(): boolean {
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).get("demo") === "1";
+}

@@ -64,7 +64,7 @@ export function SubtasksEditor({ subtasks, onAdd, onToggle, onRemove }: Subtasks
         />
         <button
           type="button"
-          className="btn btn-secondary btn-sm"
+          className="btn btn--secondary btn-sm"
           aria-label="Add step"
           disabled={draft.trim() === ""}
           onClick={add}

@@ -3,8 +3,7 @@ import { useApp } from "../../app/store";
 import { navigate } from "../../app/router";
 import { TaskGroup } from "../../components/TaskGroup";
 import { EmptyState } from "../../components/EmptyState";
-import { PageHeading } from "../../components/PageHeading";
-import { Split } from "../../components/Split";
+import { ScreenHeader } from "../../components/ScreenHeader";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { EmojiColorPicker } from "../../components/EmojiColorPicker";
 import { useToast } from "../../components/ToastProvider";
@@ -25,9 +24,9 @@ export function ProjectDetailPage({ projectId }: Props) {
   if (project === null) {
     return (
       <>
-        <PageHeading kicker="Missing" title="Project not found" />
+        <ScreenHeader title="Project not found" sub="Missing" />
         <EmptyState kicker="Gone" title="This project doesn’t exist or was deleted.">
-          <button type="button" className="btn btn-primary" onClick={() => navigate("/projects")}>
+          <button type="button" className="btn btn--primary" onClick={() => navigate("/projects")}>
             Back to Projects
           </button>
         </EmptyState>
@@ -53,108 +52,95 @@ export function ProjectDetailPage({ projectId }: Props) {
 
   return (
     <>
-      <PageHeading
+      <ScreenHeader
         back={{ label: "Projects", onClick: () => navigate("/projects") }}
-        kicker={tasks.length === 1 ? "1 task" : `${tasks.length} tasks`}
         title={project.name}
-        description="Tasks assigned to this project."
+        sub={tasks.length === 1 ? "1 task" : `${tasks.length} tasks`}
       />
-      <Split
-        side={
-          <div className="side-card panel">
-            <span className="field-label">Status</span>
-            <div className="row-meta">
-              <span className="tag">Todo {counts.todo}</span>
-              <span className="tag">In progress {counts.inProgress}</span>
-              <span className="tag" data-complete={counts.done > 0 ? "true" : undefined}>
-                Done {counts.done}
-              </span>
-            </div>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => openCreate({ projectId: project.id })}
-            >
-              Add task
-            </button>
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => {
-                setDraftName(project.name);
-                setDraftEmoji(project.emoji);
-                setDraftColor(project.color);
-                setEditing((current) => !current);
-              }}
-            >
-              {editing ? "Close editor" : "Edit project"}
-            </button>
-            <button
-              type="button"
-              className="btn btn-danger-ghost"
-              onClick={() => setConfirmingDelete(true)}
-            >
-              Delete project
-            </button>
-          </div>
-        }
-      >
-        {editing ? (
-          <section className="panel editor-inline">
-            <div className="field">
-              <label htmlFor="project-name">Name</label>
-              <input
-                id="project-name"
-                type="text"
-                value={draftName}
-                onChange={(event) => setDraftName(event.target.value)}
-              />
-            </div>
-            <div className="field">
-              <span className="field-label">Appearance</span>
-              <EmojiColorPicker
-                emoji={draftEmoji}
-                color={draftColor}
-                onChange={(next) => {
-                  setDraftEmoji(next.emoji);
-                  setDraftColor(next.color);
-                }}
-              />
-            </div>
-            <div className="inline-actions">
-              <button type="button" className="btn btn-primary" onClick={saveProject}>
-                Save project
-              </button>
-              <button type="button" className="btn btn-secondary" onClick={() => setEditing(false)}>
-                Cancel
-              </button>
-            </div>
-          </section>
-        ) : null}
 
-        {tasks.length === 0 ? (
-          <EmptyState kicker="Empty" title="No tasks in this project yet.">
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => openCreate({ projectId: project.id })}
-            >
-              Add a task
-            </button>
-          </EmptyState>
-        ) : (
-          <div className="groups">
-            {groups.map((group) => (
-              <TaskGroup
-                key={group.key}
-                title={group.label}
-                tasks={group.tasks}
-                projects={data.projects}
-              />
-            ))}
+      <div className="detail-actions">
+        <span className="row-pill">Todo {counts.todo}</span>
+        <span className="row-pill">In progress {counts.inProgress}</span>
+        <span className="row-pill">Done {counts.done}</span>
+      </div>
+
+      <div className="btn-row detail-buttons">
+        <button
+          type="button"
+          className="btn btn--secondary"
+          onClick={() => {
+            setDraftName(project.name);
+            setDraftEmoji(project.emoji);
+            setDraftColor(project.color);
+            setEditing((current) => !current);
+          }}
+        >
+          {editing ? "Close editor" : "Edit project"}
+        </button>
+        <button
+          type="button"
+          className="btn btn--danger-ghost"
+          onClick={() => setConfirmingDelete(true)}
+        >
+          Delete project
+        </button>
+      </div>
+
+      {editing ? (
+        <section className="editor-inline">
+          <div className="field">
+            <label htmlFor="project-name">Name</label>
+            <input
+              id="project-name"
+              type="text"
+              value={draftName}
+              onChange={(event) => setDraftName(event.target.value)}
+            />
           </div>
-        )}
-      </Split>
+          <div className="field">
+            <span className="field-label">Appearance</span>
+            <EmojiColorPicker
+              emoji={draftEmoji}
+              color={draftColor}
+              onChange={(next) => {
+                setDraftEmoji(next.emoji);
+                setDraftColor(next.color);
+              }}
+            />
+          </div>
+          <div className="btn-row">
+            <button type="button" className="btn btn--primary" onClick={saveProject}>
+              Save project
+            </button>
+            <button type="button" className="btn btn--secondary" onClick={() => setEditing(false)}>
+              Cancel
+            </button>
+          </div>
+        </section>
+      ) : null}
+
+      {tasks.length === 0 ? (
+        <EmptyState kicker="Empty" title="No tasks in this project yet.">
+          <button
+            type="button"
+            className="btn btn--primary"
+            onClick={() => openCreate({ projectId: project.id })}
+          >
+            Add a task
+          </button>
+        </EmptyState>
+      ) : (
+        <div className="groups">
+          {groups.map((group) => (
+            <TaskGroup
+              key={group.key}
+              title={group.label}
+              tasks={group.tasks}
+              projects={data.projects}
+            />
+          ))}
+        </div>
+      )}
 
       {confirmingDelete ? (
         <ConfirmDialog

@@ -5,3 +5,11 @@ dist-ssr
 
 .DS_Store
 *.log
+
+# the design kit's gate state (the waivers are kept, the run state is not)
+.taste-skill/*
+!.taste-skill/waivers.json
+
+# the design skill installed locally for the redesign (39 MB of kit assets)
+.agents/
+skills-lock.json

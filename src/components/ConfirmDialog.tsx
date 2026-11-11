@@ -68,12 +68,12 @@ export function ConfirmDialog({
         </h2>
         <div className="confirm-message">{message}</div>
         <div className="dialog-footer">
-          <button type="button" className="btn" onClick={onCancel}>
+          <button type="button" className="btn btn--secondary" onClick={onCancel}>
             {cancelLabel}
           </button>
           <button
             type="button"
-            className={danger ? "btn btn-danger" : "btn btn-primary"}
+            className={danger ? "btn btn--danger" : "btn btn--primary"}
             onClick={onConfirm}
           >
             {confirmLabel}

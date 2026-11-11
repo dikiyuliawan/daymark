@@ -1,9 +1,16 @@
 import { DragEvent, KeyboardEvent } from "react";
-import { Priority, Project, Task, TaskStatus, priorityLabel } from "../domain/types";
-import { formatLocalDateShort, localDateKey } from "../domain/localDate";
-import { tileGlyph, tileHex } from "../domain/appearance";
+import {
+  Priority,
+  Project,
+  Task,
+  TaskStatus,
+  priorityLabel,
+  statusLabel,
+} from "../domain/types";
+import { formatDateCompact, localDateKey } from "../domain/localDate";
 import { Dropdown } from "./Dropdown";
 import { STATUS_CHOICES } from "./statusChoices";
+import { CheckCircle } from "./CheckCircle";
 import { CalendarIcon, FlagIcon, GripIcon } from "./icons";
 
 type TaskRowProps = {
@@ -34,11 +41,12 @@ export function TaskRow({
       ? projects.find((candidate) => candidate.id === task.projectId)
       : undefined;
   const inToday = task.scheduledDate !== null;
-  const hex = tileHex(task.color);
   const today = localDateKey();
   const overdue = task.dueDate !== null && task.dueDate < today && task.status !== "done";
   const subtaskTotal = task.subtasks.length;
   const subtaskDone = task.subtasks.filter((subtask) => subtask.done).length;
+  const done = task.status === "done";
+  const rowId = `task-${task.id}`;
 
   const handleDragStart = (event: DragEvent<HTMLButtonElement>) => {
     event.dataTransfer.setData("text/plain", task.id);
@@ -75,6 +83,84 @@ export function TaskRow({
 
   return (
     <li className="row" data-status={task.status} onDragOver={handleDragOver} onDrop={handleDrop}>
+      <button
+        type="button"
+        className="row-check"
+        aria-pressed={done}
+        aria-label={done ? `Mark “${task.title}” not done` : `Mark “${task.title}” done`}
+        onClick={() => onStatusChange(task.id, done ? "todo" : "done")}
+      >
+        <CheckCircle checked={done} inProgress={task.status === "in_progress"} />
+      </button>
+
+      <div className="row-body">
+        <button
+          type="button"
+          className="row-title"
+          onClick={() => onOpen(task.id)}
+          aria-label={`Open task details: ${task.title}`}
+        >
+          <span className="row-title-text">{task.title}</span>
+        </button>
+
+        <div className="row-meta">
+          {task.dueDate ? (
+            <span className={overdue ? "meta-overdue" : undefined}>
+              <CalendarIcon size={13} />
+              {overdue ? "Overdue" : formatDateCompact(task.dueDate)}
+            </span>
+          ) : null}
+          {task.priority ? (
+            <span
+              className="meta-flag"
+              data-priority={task.priority}
+              title={`${priorityLabel(task.priority)} priority`}
+            >
+              <FlagIcon size={13} />
+              <span className="visually-hidden">{priorityLabel(task.priority)} priority</span>
+            </span>
+          ) : null}
+          {task.emoji ? (
+            <span className="meta-emoji" aria-hidden="true">
+              {task.emoji}
+            </span>
+          ) : null}
+          {project ? (
+            <span className="meta-project">
+              {task.emoji ? "" : `${project.emoji ? `${project.emoji} ` : ""}`}
+              #{project.name}
+            </span>
+          ) : null}
+          <Dropdown
+            variant="dot"
+            label={`Status for "${task.title}"`}
+            value={task.status}
+            options={STATUS_CHOICES}
+            onChange={(value) => onStatusChange(task.id, value as TaskStatus)}
+            describedBy={`${rowId}-status`}
+          />
+          <span id={`${rowId}-status`} className="visually-hidden">
+            {statusLabel(task.status)}
+          </span>
+          {showTodayToggle && !inToday ? (
+            <button
+              type="button"
+              className="chip chip-xs"
+              onClick={() => onToggleToday(task.id, true)}
+              aria-label={`Add “${task.title}” to Today`}
+            >
+              Today
+            </button>
+          ) : null}
+        </div>
+      </div>
+
+      {subtaskTotal > 0 ? (
+        <span className="row-pill">
+          {subtaskDone}/{subtaskTotal}
+        </span>
+      ) : null}
+
       {onMove ? (
         <button
           type="button"
@@ -84,73 +170,9 @@ export function TaskRow({
           onKeyDown={handleGripKeyDown}
           aria-label={`Reorder "${task.title}" (Alt+Arrow)`}
         >
-          <GripIcon />
+          <GripIcon size={16} />
         </button>
       ) : null}
-      <span
-        className="tile"
-        aria-hidden="true"
-        style={hex ? ({ "--tile": hex } as React.CSSProperties) : undefined}
-      >
-        {task.emoji ?? tileGlyph(task.title)}
-      </span>
-      <div className="row-body">
-        <button
-          type="button"
-          className="row-title"
-          onClick={() => onOpen(task.id)}
-          aria-label={`Open task details: ${task.title}`}
-        >
-          {task.title}
-        </button>
-        <div className="row-meta">
-          {task.priority ? (
-            <span className="tag tag-priority" data-priority={task.priority}>
-              <FlagIcon size={12} />
-              {priorityLabel(task.priority)}
-            </span>
-          ) : null}
-          {project ? <span className="tag">{project.emoji ? `${project.emoji} ` : ""}{project.name}</span> : null}
-          {task.dueDate ? (
-            <span className="tag" data-overdue={overdue ? "true" : undefined}>
-              <CalendarIcon size={12} />
-              {formatLocalDateShort(task.dueDate)}
-            </span>
-          ) : null}
-          {subtaskTotal > 0 ? (
-            <span className="tag" data-complete={subtaskDone === subtaskTotal ? "true" : undefined}>
-              {subtaskDone}/{subtaskTotal}
-            </span>
-          ) : null}
-          {showTodayToggle && !inToday ? (
-            <button
-              type="button"
-              className="chip chip-xs"
-              onClick={() => onToggleToday(task.id, true)}
-              aria-label={`Add "${task.title}" to Today`}
-            >
-              Today
-            </button>
-          ) : null}
-          {showTodayToggle && inToday ? (
-            <button
-              type="button"
-              className="chip chip-xs is-on"
-              onClick={() => onToggleToday(task.id, false)}
-              aria-label={`Remove "${task.title}" from Today`}
-            >
-              On Today
-            </button>
-          ) : null}
-        </div>
-      </div>
-      <Dropdown
-        variant="chip"
-        label={`Status for "${task.title}"`}
-        value={task.status}
-        options={STATUS_CHOICES}
-        onChange={(value) => onStatusChange(task.id, value as TaskStatus)}
-      />
     </li>
   );
 }
