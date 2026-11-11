@@ -398,6 +398,7 @@ ol {
 }
 
 .row-title {
+  position: relative;
   display: block;
   width: 100%;
   padding: 0;
@@ -409,6 +410,17 @@ ol {
   font-weight: 500;
   letter-spacing: -0.01em;
   color: var(--ink);
+}
+
+/* the title's target reaches up into the row's own padding, never over the
+   row above it and never over the controls on the meta line below */
+.row-title::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  bottom: 0;
+  left: 0;
+  right: 0;
 }
 
 .row[data-status="done"] .row-title {
@@ -424,7 +436,7 @@ ol {
   align-items: center;
   flex-wrap: wrap;
   gap: 4px 8px;
-  margin-top: 9px;
+  margin-top: 12px;
   font-size: var(--t-meta);
   color: var(--muted);
 }

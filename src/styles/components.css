@@ -135,6 +135,7 @@
 }
 
 .chip {
+  position: relative;
   height: 32px;
   padding: 0 11px;
   border: 1px solid var(--line);
@@ -145,6 +146,16 @@
   font-weight: 500;
   line-height: 1;
   white-space: nowrap;
+}
+
+/* the chip keeps its size; its target is a thumb's */
+.chip::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  bottom: -6px;
+  left: -2px;
+  right: -2px;
 }
 
 /* a row of many lengths: the same chips, packed tighter */
@@ -286,16 +297,6 @@
   border-radius: var(--r-sheet) var(--r-sheet) 0 0;
   box-shadow: 0 -8px 40px -12px rgb(0 0 0 / 0.3);
   animation: sheet-in 260ms var(--ease);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .sheet {
-    animation: none;
-  }
-
-  .toast {
-    animation: none;
-  }
 }
 
 @keyframes sheet-in {
@@ -474,7 +475,7 @@
 }
 
 .new-project input::placeholder {
-  color: var(--faint);
+  color: var(--muted);
 }
 
 .detail-actions {
@@ -531,14 +532,6 @@
   }
   to {
     transform: scaleX(1);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .day-head-row,
-  .screen-sub,
-  .progress-fill {
-    animation: none;
   }
 }
 
@@ -686,7 +679,7 @@
 .field input::placeholder,
 .field textarea::placeholder,
 .search-input::placeholder {
-  color: var(--faint);
+  color: var(--muted);
 }
 
 .field-error {
@@ -792,6 +785,7 @@
 }
 
 .dropdown-dot .dropdown-trigger {
+  position: relative;
   height: 20px;
   gap: 3px;
   padding: 0 1px;
@@ -799,6 +793,15 @@
   border-radius: 4px;
   background: none;
   color: var(--muted);
+}
+
+.dropdown-dot .dropdown-trigger::before {
+  content: "";
+  position: absolute;
+  top: -12px;
+  bottom: -12px;
+  left: -8px;
+  right: -8px;
 }
 
 .dropdown-dot .dropdown-trigger:hover {
@@ -897,7 +900,7 @@
 }
 
 .dropdown-option-hint {
-  color: var(--faint);
+  color: var(--muted);
   font-size: 13px;
 }
 
@@ -1002,7 +1005,7 @@
 }
 
 .emoji-btn-none {
-  color: var(--faint);
+  color: var(--muted);
   font-size: 15px;
 }
 
@@ -1119,7 +1122,7 @@
 
 .focus-planned {
   font-size: var(--t-meta);
-  color: var(--faint);
+  color: var(--muted);
 }
 
 .focus-planned[data-over="true"] {
@@ -1240,7 +1243,7 @@
 
 .flow-step {
   font-size: var(--t-meta);
-  color: var(--faint);
+  color: var(--muted);
 }
 
 .flow-steps {
@@ -1322,6 +1325,18 @@
 .plan-item-body {
   flex: 1;
   min-width: 0;
+  cursor: pointer;
+}
+
+.plan-item .m-check {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+}
+
+.plan-item .m-check::before {
+  width: 12px;
+  height: 7px;
 }
 
 .plan-item-title {
@@ -1461,4 +1476,27 @@
 
 .meta-ritual {
   color: var(--action-text);
+}
+
+/* ------------------------------------------------------------------ reduced motion */
+
+@media (prefers-reduced-motion: reduce) {
+  /* entrances stand as they are */
+  .day-head-row,
+  .screen-sub,
+  .progress-fill,
+  .sheet,
+  .toast,
+  .dropdown-menu {
+    animation: none;
+  }
+
+  /* moves become jumps: the colours still change, the boxes do not travel */
+  .fab,
+  .row-check svg,
+  .icon-btn,
+  .chip,
+  .dropdown-trigger {
+    transition: none;
+  }
 }

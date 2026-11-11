@@ -23,14 +23,15 @@ function PlanItem({ title, meta, checked, onToggle, action }: PlanItemProps) {
       <input
         type="checkbox"
         className="m-check"
+        id={`check-${title}`}
         checked={checked}
         onChange={onToggle}
         aria-label={title}
       />
-      <span className="plan-item-body">
+      <label className="plan-item-body" htmlFor={`check-${title}`}>
         <span className="plan-item-title">{title}</span>
         {meta ? <span className="plan-item-meta">{meta}</span> : null}
-      </span>
+      </label>
       {action}
     </div>
   );
