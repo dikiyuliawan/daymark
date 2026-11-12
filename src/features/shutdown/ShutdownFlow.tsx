@@ -38,10 +38,9 @@ function ShutdownItem({ title, meta, checked, onToggle }: ShutdownItemProps) {
  * The shutdown ritual: what got done, what is left, and one line about the
  * day. The day closes and the leftovers roll into tomorrow.
  */
-export function ShutdownFlow() {
+export function ShutdownFlow({ step }: { step: number }) {
   const { data, tasks, todayKey, closeDay, undoCloseDay } = useApp();
   const { showToast } = useToast();
-  const [step, setStep] = useState(0);
 
   const todays = useMemo(
     () => tasks.filter((task) => task.scheduledDate === todayKey),
@@ -66,7 +65,7 @@ export function ShutdownFlow() {
         steps={STEPS}
         onExit={() => navigate("/today")}
         action={
-          <button type="button" className="btn btn--primary" onClick={() => setStep(1)}>
+          <button type="button" className="btn btn--primary" onClick={() => navigate("/shutdown/1")}>
             Continue
           </button>
         }
@@ -100,9 +99,9 @@ export function ShutdownFlow() {
         lede="Anything ticked rolls into tomorrow."
         step={2}
         steps={STEPS}
-        onExit={() => setStep(0)}
+        onExit={() => navigate("/shutdown/0")}
         action={
-          <button type="button" className="btn btn--primary" onClick={() => setStep(2)}>
+          <button type="button" className="btn btn--primary" onClick={() => navigate("/shutdown/2")}>
             Continue
           </button>
         }
@@ -132,7 +131,7 @@ export function ShutdownFlow() {
       lede="What the day was, in a sentence."
       step={3}
       steps={STEPS}
-      onExit={() => setStep(1)}
+      onExit={() => navigate("/shutdown/1")}
       action={
         <button
           type="button"

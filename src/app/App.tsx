@@ -68,9 +68,9 @@ function Main() {
     case "search":
       return <SearchPage />;
     case "plan":
-      return <PlanFlow />;
+      return <PlanFlow step={route.step} />;
     case "shutdown":
-      return <ShutdownFlow />;
+      return <ShutdownFlow step={route.step} />;
     case "notFound":
       return <NotFoundPage />;
   }

@@ -346,6 +346,23 @@ describe("app integration", () => {
     });
   });
 
+  it("keeps the ritual's step in the address, so the back button steps back", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: /Plan the day/ }));
+    await screen.findByRole("heading", { name: "Yesterday" });
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await screen.findByRole("heading", { name: "Today" });
+    expect(window.location.hash).toBe("#/plan/1");
+
+    // the browser's back button walks the ritual back a step
+    window.location.hash = "#/plan/0";
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Yesterday" })).toBeInTheDocument();
+    });
+  });
+
   it("closes the day: what is left rolls over and the note is kept", async () => {
     const user = userEvent.setup();
     render(<App />);

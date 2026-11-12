@@ -8,8 +8,8 @@ export type Route =
   | { name: "unassigned" }
   | { name: "focus" }
   | { name: "search" }
-  | { name: "plan" }
-  | { name: "shutdown" }
+  | { name: "plan"; step: number }
+  | { name: "shutdown"; step: number }
   | { name: "notFound" };
 
 export function parseHash(hash: string): Route {
@@ -33,11 +33,13 @@ export function parseHash(hash: string): Route {
   if (normalized === "/search") {
     return { name: "search" };
   }
-  if (normalized === "/plan") {
-    return { name: "plan" };
+  const planMatch = /^\/plan(?:\/(\d))?$/.exec(normalized);
+  if (planMatch) {
+    return { name: "plan", step: planMatch[1] === undefined ? 0 : Number(planMatch[1]) };
   }
-  if (normalized === "/shutdown") {
-    return { name: "shutdown" };
+  const shutdownMatch = /^\/shutdown(?:\/(\d))?$/.exec(normalized);
+  if (shutdownMatch) {
+    return { name: "shutdown", step: shutdownMatch[1] === undefined ? 0 : Number(shutdownMatch[1]) };
   }
   const projectMatch = /^\/projects\/([^/]+)$/.exec(normalized);
   if (projectMatch) {
@@ -63,9 +65,9 @@ export function routePath(route: Route): string {
     case "search":
       return "#/search";
     case "plan":
-      return "#/plan";
+      return route.step > 0 ? `#/plan/${route.step}` : "#/plan";
     case "shutdown":
-      return "#/shutdown";
+      return route.step > 0 ? `#/shutdown/${route.step}` : "#/shutdown";
     case "notFound":
       return "#/today";
   }

@@ -41,9 +41,8 @@ function PlanItem({ title, meta, checked, onToggle, action }: PlanItemProps) {
  * The planning ritual: yesterday, today, then the day itself. Three steps,
  * one question each, the same language as the rest of the app.
  */
-export function PlanFlow() {
+export function PlanFlow({ step }: { step: number }) {
   const { data, tasks, todayKey, carryTasks } = useApp();
-  const [step, setStep] = useState(0);
 
   const yesterday = addDays(todayKey, -1);
   const leftover = useMemo(
@@ -83,7 +82,7 @@ export function PlanFlow() {
             className="btn btn--primary"
             onClick={() => {
               carryTasks(carried, todayKey);
-              setStep(1);
+              navigate("/plan/1");
             }}
           >
             Continue
@@ -116,14 +115,14 @@ export function PlanFlow() {
         lede="Pull what you want to work on into the day."
         step={2}
         steps={STEPS}
-        onExit={() => setStep(0)}
+        onExit={() => navigate("/plan/0")}
         action={
           <button
             type="button"
             className="btn btn--primary"
             onClick={() => {
               carryTasks(added, todayKey);
-              setStep(2);
+              navigate("/plan/2");
             }}
           >
             Continue
@@ -157,7 +156,7 @@ export function PlanFlow() {
       lede="What you have planned, and whether it fits."
       step={3}
       steps={STEPS}
-      onExit={() => setStep(1)}
+      onExit={() => navigate("/plan/1")}
       action={
         <button type="button" className="btn btn--primary" onClick={() => navigate("/today")}>
           Start the day

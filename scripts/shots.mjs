@@ -90,6 +90,11 @@ const SCENES = [
     },
   },
   {
+    name: "empty-tasks",
+    route: "/tasks",
+    fresh: true,
+  },
+  {
     name: "large-text",
     route: "/today",
     run: async () => {

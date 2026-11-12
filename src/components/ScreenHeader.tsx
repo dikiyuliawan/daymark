@@ -15,6 +15,8 @@ type ScreenHeaderProps = {
   showActions?: boolean;
   /** The day screen sets the larger title. */
   day?: boolean;
+  /** Extra classes on the header, for the day's entrance. */
+  className?: string;
 };
 
 /**
@@ -30,9 +32,10 @@ export function ScreenHeader({
   actions,
   showActions = true,
   day = false,
+  className,
 }: ScreenHeaderProps) {
   return (
-    <header className="screen-head">
+    <header className={className === undefined ? "screen-head" : `screen-head ${className}`}>
       <div className="screen-head-main">
         {back ? (
           <button type="button" className="screen-back" onClick={back.onClick}>

@@ -14,9 +14,19 @@ import { formatDateLine, formatWeekday } from "../../domain/localDate";
 import { formatDurationLabel } from "../../domain/format";
 import { sortByOrder } from "../../domain/reorder";
 
+let dayEntered = false;
+
+/** The day enters once a session, not on every visit. */
+function firstTimeToday(): boolean {
+  if (dayEntered) return false;
+  dayEntered = true;
+  return true;
+}
+
 export function TodayPage() {
   const { data, todayKey, openCreate, setWorkdayMinutes } = useApp();
   const [budgetOpen, setBudgetOpen] = useState(false);
+  const [entering] = useState(firstTimeToday);
 
   const scheduled = useMemo(
     () => sortByOrder(data.tasks.filter((task) => task.scheduledDate === todayKey)),
@@ -40,6 +50,7 @@ export function TodayPage() {
     <>
       <ScreenHeader
         day
+        className={entering ? "is-entering" : undefined}
         title={formatWeekday(todayKey)}
         sub={formatDateLine(todayKey)}
         subAside={
@@ -69,7 +80,7 @@ export function TodayPage() {
       />
 
       <div
-        className="progress"
+        className={`progress${entering ? " is-entering" : ""}`}
         role="img"
         aria-label={`${doneCount} of ${planned} planned tasks done`}
       >

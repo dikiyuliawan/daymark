@@ -18,7 +18,7 @@ const STATUS_CHIPS: { value: StatusFilter; label: string }[] = [
 ];
 
 export function TasksPage() {
-  const { data, tasks, todayKey } = useApp();
+  const { data, tasks, todayKey, openCreate } = useApp();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [projectFilter, setProjectFilter] = useState<ProjectFilter>("");
 
@@ -45,9 +45,10 @@ export function TasksPage() {
     <>
       <ScreenHeader
         title="Tasks"
-        sub={total === 0 ? "No tasks yet" : `${total} task${total === 1 ? "" : "s"}`}
+        sub={total === 0 ? undefined : `${total} task${total === 1 ? "" : "s"}`}
       />
 
+      {total === 0 ? null : (
       <div className="filter-row">
         <div className="chip-row" role="group" aria-label="Status">
           {STATUS_CHIPS.map((chip) => (
@@ -75,6 +76,7 @@ export function TasksPage() {
           ]}
         />
       </div>
+      )}
 
       {rituals.length > 0 ? (
         <TaskGroup title="Rituals" tasks={rituals} projects={data.projects} />
@@ -82,7 +84,12 @@ export function TasksPage() {
 
       {visible.length === 0 ? (
         total === 0 ? (
-          <EmptyState kicker="Start here" title="No tasks yet." />
+          <EmptyState kicker="Start here" title="No tasks yet.">
+            <p className="muted small">Nothing captured yet. Add your first task and it waits for the day you plan it.</p>
+            <button type="button" className="btn btn--primary" onClick={() => openCreate()}>
+              Add a task
+            </button>
+          </EmptyState>
         ) : (
           <EmptyState kicker="Filtered" title="No tasks match these filters." />
         )

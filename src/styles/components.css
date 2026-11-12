@@ -500,12 +500,12 @@
 
 /* ------------------------------------------------------------------ the day's entrance */
 
-.day-head-row,
-.screen-sub {
+.screen-head.is-entering .day-head-row {
   animation: day-in 420ms var(--ease) both;
 }
 
-.screen-sub {
+.screen-head.is-entering .screen-sub {
+  animation: day-in 420ms var(--ease) both;
   animation-delay: 60ms;
 }
 
@@ -522,6 +522,9 @@
 
 .progress-fill {
   transform-origin: left center;
+}
+
+.progress.is-entering .progress-fill {
   animation: progress-fill 600ms var(--ease) both;
   animation-delay: 120ms;
 }
@@ -1534,4 +1537,32 @@
 
 .menu-row:disabled svg {
   color: var(--faint);
+}
+
+/* ------------------------------------------------------------------ press feedback */
+
+.row-check,
+.dropdown-trigger,
+.chip,
+.icon-btn {
+  transition: background-color 120ms var(--ease), color 120ms var(--ease);
+}
+
+.row-check:active {
+  background: var(--fill);
+}
+
+.row-check:active svg {
+  transform: scale(0.92);
+}
+
+.dropdown-trigger:active,
+.chip:active {
+  background: var(--fill);
+  color: var(--ink);
+}
+
+.icon-btn:active {
+  background: var(--fill);
+  color: var(--ink);
 }

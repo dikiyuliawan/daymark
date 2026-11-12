@@ -582,7 +582,13 @@ ol {
 
 .empty-actions {
   display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 16px;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.empty-actions .muted.small {
+  max-width: 30ch;
+  line-height: 1.45;
 }
