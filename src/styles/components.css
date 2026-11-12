@@ -20,15 +20,15 @@
   border: 1px solid transparent;
   border-radius: var(--r-btn);
   background: transparent;
-  font-size: 15px;
+  font-size: var(--t-lead);
   font-weight: 500;
   line-height: 1;
   white-space: nowrap;
 }
 
 .btn svg {
-  width: 18px;
-  height: 18px;
+  width: var(--icon-md);
+  height: var(--icon-md);
 }
 
 .btn--primary {
@@ -72,7 +72,7 @@
 .btn-sm {
   height: 36px;
   padding: 0 12px;
-  font-size: 14px;
+  font-size: var(--t-ui);
 }
 
 .icon-btn {
@@ -97,8 +97,8 @@
 }
 
 .icon-btn-sm svg {
-  width: 16px;
-  height: 16px;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
 }
 
 /* the pointer answer, like the kit's buttons: a fill and a darker ink */
@@ -142,7 +142,7 @@
   border-radius: var(--r-pill);
   background: transparent;
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--t-label);
   font-weight: 500;
   line-height: 1;
   white-space: nowrap;
@@ -177,7 +177,7 @@
   position: relative;
   height: 26px;
   padding: 0 9px;
-  font-size: 12px;
+  font-size: var(--t-pill);
 }
 
 /* ------------------------------------------------------------------ tab bar */
@@ -206,7 +206,7 @@
   border: 0;
   background: none;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--t-badge);
   font-weight: 500;
   letter-spacing: 0.01em;
 }
@@ -218,8 +218,8 @@
 }
 
 .tab-icon svg {
-  width: 22px;
-  height: 22px;
+  width: var(--icon-lg);
+  height: var(--icon-lg);
 }
 
 .tab.is-on {
@@ -255,8 +255,8 @@
 }
 
 .fab svg {
-  width: 24px;
-  height: 24px;
+  width: var(--icon-xl);
+  height: var(--icon-xl);
 }
 
 /* the add button steps out of the way while the page scrolls down */
@@ -327,7 +327,7 @@
 }
 
 .sheet-title {
-  font-size: 20px;
+  font-size: var(--t-sheet);
   font-weight: 700;
   letter-spacing: -0.02em;
 }
@@ -390,7 +390,7 @@
 }
 
 .dialog-title {
-  font-size: 18px;
+  font-size: var(--t-sheet);
   font-weight: 700;
   letter-spacing: -0.015em;
 }
@@ -420,8 +420,8 @@
 }
 
 .switch-row .m-switch::before {
-  width: 18px;
-  height: 18px;
+  width: var(--icon-md);
+  height: var(--icon-md);
   left: 4px;
   top: 4px;
 }
@@ -471,7 +471,7 @@
   border: 1px solid var(--line-strong);
   border-radius: var(--r-ctl);
   background: var(--surface);
-  font-size: 16px;
+  font-size: var(--t-body);
 }
 
 .new-project input::placeholder {
@@ -559,7 +559,7 @@
   border-radius: 14px;
   background: var(--ink);
   color: var(--bg);
-  font-size: 14px;
+  font-size: var(--t-ui);
   pointer-events: auto;
   animation: toast-in 220ms var(--ease);
 }
@@ -578,7 +578,7 @@
 .toast .btn {
   height: 32px;
   padding: 0 12px;
-  font-size: 14px;
+  font-size: var(--t-ui);
   color: var(--bg);
   border-color: rgb(255 255 255 / 0.28);
 }
@@ -594,7 +594,7 @@
   margin-bottom: 16px;
   padding: 14px;
   border-radius: var(--r-card);
-  font-size: 14px;
+  font-size: var(--t-ui);
   line-height: 1.5;
 }
 
@@ -617,7 +617,7 @@
 
 .banner-actions .btn {
   height: 36px;
-  font-size: 14px;
+  font-size: var(--t-ui);
   border-color: currentColor;
   background: transparent;
   color: inherit;
@@ -667,7 +667,7 @@
   border: 1px solid var(--line-strong);
   border-radius: var(--r-ctl);
   background: var(--surface);
-  font-size: 16px;
+  font-size: var(--t-body);
   line-height: 1.4;
   resize: vertical;
 }
@@ -719,14 +719,14 @@
   border-radius: var(--r-ctl);
   background: var(--surface);
   color: var(--ink);
-  font-size: 14px;
+  font-size: var(--t-ui);
   font-weight: 500;
 }
 
 .dropdown-chip .dropdown-trigger {
   height: 32px;
   border-radius: var(--r-pill);
-  font-size: 13px;
+  font-size: var(--t-meta);
   font-weight: 500;
 }
 
@@ -743,7 +743,7 @@
 .dropdown-filter .dropdown-trigger {
   height: 32px;
   border-radius: var(--r-pill);
-  font-size: 13px;
+  font-size: var(--t-meta);
 }
 
 .dropdown-meta .dropdown-trigger {
@@ -753,7 +753,7 @@
   border-radius: 4px;
   background: none;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--t-pill);
   font-weight: 500;
 }
 
@@ -776,7 +776,7 @@
   border: 0;
   background: none;
   color: var(--ink-2);
-  font-size: 15px;
+  font-size: var(--t-lead);
   font-weight: 500;
 }
 
@@ -825,7 +825,7 @@
   border-radius: 6px;
   background: var(--fill);
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--t-pill);
   font-weight: 500;
 }
 
@@ -852,8 +852,8 @@
 }
 
 .dropdown-chevron {
-  width: 14px;
-  height: 14px;
+  width: var(--icon-xs);
+  height: var(--icon-xs);
   color: var(--faint);
 }
 
@@ -890,7 +890,7 @@
   gap: 8px;
   padding: 9px 10px;
   border-radius: 9px;
-  font-size: 14px;
+  font-size: var(--t-ui);
   white-space: nowrap;
   cursor: pointer;
 }
@@ -901,7 +901,7 @@
 
 .dropdown-option-hint {
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--t-meta);
 }
 
 .status-dot {
@@ -939,7 +939,7 @@
 
 .subtask-title {
   flex: 1;
-  font-size: 15px;
+  font-size: var(--t-lead);
 }
 
 .subtask[data-done="true"] .subtask-title {
@@ -960,7 +960,7 @@
   border: 1px solid var(--line-strong);
   border-radius: var(--r-ctl);
   background: var(--surface);
-  font-size: 15px;
+  font-size: var(--t-lead);
 }
 
 .subtask-add .btn {
@@ -995,7 +995,7 @@
   border: 0;
   border-radius: 9px;
   background: none;
-  font-size: 17px;
+  font-size: var(--t-row);
   line-height: 1;
 }
 
@@ -1006,7 +1006,7 @@
 
 .emoji-btn-none {
   color: var(--muted);
-  font-size: 15px;
+  font-size: var(--t-lead);
 }
 
 .swatch-row {
@@ -1080,7 +1080,7 @@
 .bars-axis span {
   flex: 1;
   text-align: center;
-  font-size: 11px;
+  font-size: var(--t-micro);
   color: var(--muted);
 }
 
@@ -1108,7 +1108,7 @@
 }
 
 .focus-time {
-  font-size: 56px;
+  font-size: var(--t-clock);
   line-height: 1;
   font-weight: 700;
   letter-spacing: -0.03em;
@@ -1150,7 +1150,7 @@
   border-radius: var(--r-pill);
   background: none;
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--t-meta);
   font-weight: 500;
   line-height: 1;
   white-space: nowrap;
@@ -1213,7 +1213,7 @@
 .flow {
   display: flex;
   flex-direction: column;
-  min-height: calc(100dvh - 28px - var(--safe-t));
+  min-height: calc(100dvh - 28px - var(--safe-t) - var(--safe-b));
 }
 
 .flow-head {
@@ -1237,8 +1237,8 @@
 }
 
 .flow-close svg {
-  width: 16px;
-  height: 16px;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
 }
 
 .flow-step {
@@ -1302,7 +1302,7 @@
 }
 
 .flow-action {
-  padding-top: 10px;
+  padding: 10px 0 var(--safe-b);
 }
 
 .flow-action .btn {
@@ -1329,8 +1329,8 @@
 }
 
 .plan-item .m-check {
-  width: 24px;
-  height: 24px;
+  width: var(--icon-xl);
+  height: var(--icon-xl);
   border-radius: 7px;
 }
 
@@ -1362,7 +1362,7 @@
 }
 
 .plan-load-figure {
-  font-size: 24px;
+  font-size: var(--t-figure);
   font-weight: 700;
   letter-spacing: -0.02em;
 }
@@ -1418,8 +1418,8 @@
 }
 
 .action-row-icon svg {
-  width: 17px;
-  height: 17px;
+  width: var(--icon-md);
+  height: var(--icon-md);
 }
 
 .action-row-body {

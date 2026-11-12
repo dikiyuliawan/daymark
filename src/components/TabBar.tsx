@@ -65,7 +65,7 @@ export function TabBar() {
         onClick={() => openCreate()}
         aria-label="New task"
       >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden focusable={false}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" aria-hidden focusable={false}>
           <path d="M12 5v14M5 12h14" />
         </svg>
       </button>

@@ -31,15 +31,8 @@ export function ChevronRight({ size = 16, className }: IconProps) {
   );
 }
 
-export function ArrowLeft({ size = 18, className }: IconProps) {
-  return (
-    <svg {...base(size)} className={className}>
-      <path d="M19 12H5M11 6l-6 6 6 6" />
-    </svg>
-  );
-}
 
-export function Plus({ size = 18, className }: IconProps) {
+export function Plus({ size = 16, className }: IconProps) {
   return (
     <svg {...base(size)} className={className}>
       <path d="M12 5v14M5 12h14" />
@@ -55,18 +48,11 @@ export function Check({ size = 16, className }: IconProps) {
   );
 }
 
-export function HomeIcon({ size = 20, className }: IconProps) {
-  return (
-    <svg {...base(size)} className={className}>
-      <path d="M4 11.5 12 4l8 7.5V20h-5v-5h-6v5H4z" />
-    </svg>
-  );
-}
 
 /** The day: a sun with short rays, the Today tab. */
 export function SunGlyph({ size = 22, className }: IconProps) {
   return (
-    <svg {...base(size)} className={className} strokeWidth={1.7}>
+    <svg {...base(size)} className={className}>
       <circle cx="12" cy="12" r="4.1" />
       <path d="M12 3.2v2.1M12 18.7v2.1M3.2 12h2.1M18.7 12h2.1M5.8 5.8l1.5 1.5M16.7 16.7l1.5 1.5M18.2 5.8l-1.5 1.5M7.3 16.7l-1.5 1.5" />
     </svg>
@@ -134,17 +120,8 @@ export function InboxIcon({ size = 18, className }: IconProps) {
   );
 }
 
-export function SlidersIcon({ size = 18, className }: IconProps) {
-  return (
-    <svg {...base(size)} className={className}>
-      <path d="M4 7h9M17 7h3M4 17h3M11 17h9" />
-      <circle cx="15" cy="7" r="2" />
-      <circle cx="9" cy="17" r="2" />
-    </svg>
-  );
-}
 
-export function ListIcon({ size = 20, className }: IconProps) {
+export function ListIcon({ size = 22, className }: IconProps) {
   return (
     <svg {...base(size)} className={className}>
       <path d="M8 6h12M8 12h12M8 18h12" />
@@ -155,7 +132,7 @@ export function ListIcon({ size = 20, className }: IconProps) {
   );
 }
 
-export function FolderIcon({ size = 20, className }: IconProps) {
+export function FolderIcon({ size = 22, className }: IconProps) {
   return (
     <svg {...base(size)} className={className}>
       <path d="M4 6.5h5l2 2.5h9v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18z" />
@@ -163,7 +140,7 @@ export function FolderIcon({ size = 20, className }: IconProps) {
   );
 }
 
-export function TimerIcon({ size = 20, className }: IconProps) {
+export function TimerIcon({ size = 22, className }: IconProps) {
   return (
     <svg {...base(size)} className={className}>
       <circle cx="12" cy="13" r="8" />
@@ -208,7 +185,7 @@ export function AutoIcon({ size = 18, className }: IconProps) {
   );
 }
 
-export function GripIcon({ size = 18, className }: IconProps) {
+export function GripIcon({ size = 16, className }: IconProps) {
   return (
     <svg {...base(size)} className={className} strokeWidth={0}>
       <circle cx="9" cy="7" r="1.4" fill="currentColor" />
@@ -221,7 +198,7 @@ export function GripIcon({ size = 18, className }: IconProps) {
   );
 }
 
-export function FlagIcon({ size = 14, className }: IconProps) {
+export function FlagIcon({ size = 13, className }: IconProps) {
   return (
     <svg {...base(size)} className={className}>
       <path d="M6 21V4h11l-2.5 4L17 12H6" />
@@ -229,7 +206,7 @@ export function FlagIcon({ size = 14, className }: IconProps) {
   );
 }
 
-export function CalendarIcon({ size = 16, className }: IconProps) {
+export function CalendarIcon({ size = 13, className }: IconProps) {
   return (
     <svg {...base(size)} className={className}>
       <rect x="4" y="5" width="16" height="15" rx="3" />
@@ -238,15 +215,8 @@ export function CalendarIcon({ size = 16, className }: IconProps) {
   );
 }
 
-export function TrashIcon({ size = 18, className }: IconProps) {
-  return (
-    <svg {...base(size)} className={className}>
-      <path d="M5 7h14M9.5 7V4.5h5V7M7 7l1 13h8l1-13" />
-    </svg>
-  );
-}
 
-export function PlayIcon({ size = 20, className }: IconProps) {
+export function PlayIcon({ size = 18, className }: IconProps) {
   return (
     <svg {...base(size)} className={className}>
       <path d="M8 5.5v13l10-6.5z" fill="currentColor" stroke="none" />
@@ -254,7 +224,7 @@ export function PlayIcon({ size = 20, className }: IconProps) {
   );
 }
 
-export function PauseIcon({ size = 20, className }: IconProps) {
+export function PauseIcon({ size = 18, className }: IconProps) {
   return (
     <svg {...base(size)} className={className}>
       <path d="M8.5 5.5v13M15.5 5.5v13" />
@@ -278,10 +248,3 @@ export function CloseIcon({ size = 18, className }: IconProps) {
   );
 }
 
-export function SparkIcon({ size = 16, className }: IconProps) {
-  return (
-    <svg {...base(size)} className={className}>
-      <path d="M12 3.5 13.8 9l5.5 1.8-5.5 1.8L12 18l-1.8-5.4L4.7 10.8 10.2 9z" />
-    </svg>
-  );
-}

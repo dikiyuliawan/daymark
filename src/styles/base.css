@@ -267,8 +267,8 @@ ol {
 }
 
 .screen-back svg {
-  width: 16px;
-  height: 16px;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
 }
 
 /* ------------------------------------------------------------------ progress */
@@ -457,7 +457,7 @@ ol {
 }
 
 .row-meta .meta-emoji {
-  font-size: 13px;
+  font-size: var(--t-meta);
   line-height: 1;
 }
 
@@ -484,7 +484,7 @@ ol {
 .row-meta .chip-xs {
   height: 22px;
   padding: 0 8px;
-  font-size: 12px;
+  font-size: var(--t-pill);
 }
 
 .row-pill {
@@ -524,8 +524,8 @@ ol {
 
 .row-chevron {
   flex: none;
-  width: 16px;
-  height: 16px;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
   color: var(--faint);
 }
 
@@ -544,7 +544,7 @@ ol {
   border-radius: 9px;
   background: var(--tile, var(--fill));
   color: var(--tile-ink, #3d3d42);
-  font-size: 15px;
+  font-size: var(--t-lead);
   line-height: 1;
 }
 
@@ -557,7 +557,7 @@ ol {
   width: 40px;
   height: 40px;
   border-radius: 11px;
-  font-size: 19px;
+  font-size: var(--t-sheet);
 }
 
 /* ------------------------------------------------------------------ empty state */

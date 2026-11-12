@@ -90,6 +90,17 @@ const SCENES = [
     },
   },
   {
+    name: "large-text",
+    route: "/today",
+    run: async () => {
+      // the system text size turned up
+      const style = document.createElement("style");
+      style.textContent = "html { font-size: 20px; }";
+      document.head.appendChild(style);
+      await new Promise((resolve) => setTimeout(resolve, 200));
+    },
+  },
+  {
     name: "move-menu",
     route: "/tasks",
     run: async () => {

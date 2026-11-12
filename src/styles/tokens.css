@@ -62,15 +62,30 @@
     "Helvetica Neue", Arial, sans-serif;
   --font-num: var(--font);
 
-  --t-day: 30px;
-  --t-title: 26px;
-  --t-row: 17px;
-  --t-body: 16px;
-  --t-meta: 13px;
-  --t-label: 13px;
-  --t-pill: 12px;
-  --t-badge: 12px;
-  --t-stat: 34px;
+  /* the type scale, in rem: the system's text size moves the whole app */
+  --t-day: 1.875rem; /* 30 the day's title */
+  --t-title: 1.625rem; /* 26 screen titles */
+  --t-sheet: 1.25rem; /* 20 sheet titles */
+  --t-figure: 1.5rem; /* 24 the plan's figure */
+  --t-stat: 2.125rem; /* 34 big numbers */
+  --t-clock: 3.5rem; /* 56 the focus clock */
+  --t-row: 1.0625rem; /* 17 task titles */
+  --t-body: 1rem; /* 16 body */
+  --t-lead: 0.9375rem; /* 15 */
+  --t-ui: 0.875rem; /* 14 controls */
+  --t-meta: 0.8125rem; /* 13 meta lines */
+  --t-label: 0.8125rem; /* 13 labels */
+  --t-pill: 0.75rem; /* 12 pills */
+  --t-badge: 0.75rem; /* 12 badges */
+  --t-micro: 0.6875rem; /* 11 axis labels */
+
+  /* one icon scale */
+  --icon-xs: 13px;
+  --icon-sm: 16px;
+  --icon-md: 18px;
+  --icon-lg: 22px;
+  --icon-xl: 24px;
+  --icon-stroke: 1.8;
 
   /* radius: one family */
   --r-pill: 999px;

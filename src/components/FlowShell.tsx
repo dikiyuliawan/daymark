@@ -27,7 +27,7 @@ export function FlowShell({
     <div className="flow">
       <header className="flow-head">
         <button type="button" className="flow-close" onClick={onExit}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" aria-hidden focusable={false}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" aria-hidden focusable={false}>
             <path d="M14.5 6 9 12l5.5 6" />
           </svg>
           <span>Back</span>

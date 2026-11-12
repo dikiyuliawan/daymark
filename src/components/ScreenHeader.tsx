@@ -36,7 +36,7 @@ export function ScreenHeader({
       <div className="screen-head-main">
         {back ? (
           <button type="button" className="screen-back" onClick={back.onClick}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round" aria-hidden focusable={false}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden focusable={false}>
               <path d="M14.5 6 9 12l5.5 6" />
             </svg>
             {back.label}
